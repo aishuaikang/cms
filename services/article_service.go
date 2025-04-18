@@ -53,6 +53,10 @@ func (s *articleService) CreateArticle(article domain.CreateArticleParams) error
 	images := make([]models.Image, 0)
 
 	for _, id := range article.ImageIds {
+		// 判断图片是否存在
+		if err := s.db.Where("id = ?", id).First(&models.Image{}).Error; err != nil {
+			continue
+		}
 		images = append(images, models.Image{
 			ID: id,
 		})
