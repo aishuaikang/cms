@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cms/config"
 	"cms/models/domain"
 	"cms/routes/admin"
 	"cms/routes/common"
@@ -27,6 +28,11 @@ func main() {
 		panic(err)
 	}
 
+	systemConfig, err := config.NewSystemConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	validate := validator.New()
 
 	app := fiber.New(fiber.Config{
@@ -45,6 +51,13 @@ func main() {
 
 	api := app.Group("api")
 
+	userService := services.NewUserService(db)
+
+	// 创建初始用户
+	if err := userService.CreateInitialUser(systemConfig.SysAdminUser, systemConfig.SysAdminPassword); err != nil {
+		panic(err)
+	}
+
 	{
 		// 对于所有admin路由，使用jwt中间件进行验证
 		// 这里的jwt中间件会在请求到达路由之前进行验证
@@ -62,7 +75,7 @@ func main() {
 		// 图片
 		admin.NewImageRoute(adminGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 用户
-		admin.NewUserRoute(adminGroup.Group("user"), services.NewUserService(db), validate).RegisterRoutes()
+		admin.NewUserRoute(adminGroup.Group("user"), userService, validate).RegisterRoutes()
 	}
 
 	{
@@ -70,7 +83,7 @@ func main() {
 		// 图片
 		common.NewImageRoute(commonGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 用户
-		common.NewUserRoute(commonGroup.Group("user"), validate, privateKey).RegisterRoutes()
+		common.NewUserRoute(commonGroup.Group("user"), userService, validate, privateKey).RegisterRoutes()
 	}
 
 	app.Listen(":3000")

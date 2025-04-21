@@ -18,8 +18,8 @@ var (
 type (
 	CategoryService interface {
 		GetCategorys() ([]*models.Category, error)
-		CreateCategory(category domain.CreateCategoryParams) error
-		UpdateCategory(id string, category domain.UpdateCategoryParams) error
+		CreateCategory(params domain.CreateCategoryParams) error
+		UpdateCategory(id string, params domain.UpdateCategoryParams) error
 		DeleteCategory(id string) error
 	}
 	categoryService struct {
@@ -39,39 +39,41 @@ func (s *categoryService) GetCategorys() ([]*models.Category, error) {
 	return categories, nil
 }
 
-func (s *categoryService) CreateCategory(category domain.CreateCategoryParams) error {
-	// 是否存在
-	if err := s.db.Where("name = ?", category.Name).First(&models.Category{}).Error; err == nil {
+func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) error {
+	// 检查分类名称是否已存在
+	if err := s.db.Where("name = ?", params.Name).First(&models.Category{}).Error; err == nil {
 		return ErrCategoryAlreadyExists
 	}
 
 	categoryModel := &models.Category{
-		Name:        category.Name,
-		Description: category.Description,
+		Name:        params.Name,
+		Description: params.Description,
 	}
 
 	return s.db.Create(&categoryModel).Error
 }
 
-func (s *categoryService) UpdateCategory(id string, category domain.UpdateCategoryParams) error {
+func (s *categoryService) UpdateCategory(id string, params domain.UpdateCategoryParams) error {
+	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Category{}).Error; err != nil {
 		return ErrCategoryNotFound
 	}
 
 	categoryModel := &models.Category{}
 
-	if category.Name != nil {
-		categoryModel.Name = *category.Name
+	if params.Name != nil {
+		categoryModel.Name = *params.Name
 	}
 
-	if category.Description != nil {
-		categoryModel.Description = *category.Description
+	if params.Description != nil {
+		categoryModel.Description = *params.Description
 	}
 
 	return s.db.Model(&models.Category{}).Where("id = ?", id).Updates(categoryModel).Error
 }
 
 func (s *categoryService) DeleteCategory(id string) error {
+	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Category{}).Error; err != nil {
 		return ErrCategoryNotFound
 	}

@@ -40,12 +40,12 @@ func (s *articleService) GetArticles() ([]*models.Article, error) {
 }
 
 func (s *articleService) CreateArticle(article domain.CreateArticleParams) error {
-	// 是否存在分类
+	// 检查分类是否存在
 	if err := s.db.Where("id = ?", article.CategoryID).First(&models.Category{}).Error; err != nil {
 		return ErrCategoryNotFound
 	}
 
-	// 是否已经存在
+	// 检查文章标题是否已存在
 	if err := s.db.Where("title = ?", article.Title).First(&models.Article{}).Error; err == nil {
 		return ErrArticleAlreadyExists
 	}
@@ -53,7 +53,7 @@ func (s *articleService) CreateArticle(article domain.CreateArticleParams) error
 	images := make([]models.Image, 0)
 
 	for _, id := range article.ImageIds {
-		// 判断图片是否存在
+		// 检查图片是否存在
 		if err := s.db.Where("id = ?", id).First(&models.Image{}).Error; err != nil {
 			continue
 		}
@@ -74,6 +74,7 @@ func (s *articleService) CreateArticle(article domain.CreateArticleParams) error
 }
 
 func (s *articleService) UpdateArticle(id string, article domain.UpdateArticleParams) error {
+	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Article{}).Error; err != nil {
 		return ErrArticleNotFound
 	}
@@ -81,6 +82,7 @@ func (s *articleService) UpdateArticle(id string, article domain.UpdateArticlePa
 	articleModel := &models.Article{}
 
 	if article.Title != nil {
+		// 检查文章标题是否已存在
 		if err := s.db.Where("title = ?", *article.Title).First(&models.Article{}).Error; err == nil {
 			return ErrArticleAlreadyExists
 		}
@@ -97,6 +99,7 @@ func (s *articleService) UpdateArticle(id string, article domain.UpdateArticlePa
 	}
 
 	if article.CategoryID != nil {
+		// 检查分类是否存在
 		if err := s.db.Where("id = ?", *article.CategoryID).First(&models.Category{}).Error; err != nil {
 			return ErrCategoryNotFound
 		}
@@ -111,6 +114,7 @@ func (s *articleService) UpdateArticle(id string, article domain.UpdateArticlePa
 }
 
 func (s *articleService) DeleteArticle(id string) error {
+	// 检查文章是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Article{}).Error; err != nil {
 		return ErrArticleNotFound
 	}

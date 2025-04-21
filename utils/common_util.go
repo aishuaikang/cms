@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"log"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // 私钥生成
@@ -16,4 +18,9 @@ func GeneratePrivateKey() (*rsa.PrivateKey, error) {
 		log.Fatalf("rsa.GenerateKey: %v", err)
 	}
 	return privateKey, nil
+}
+
+// 验证密码
+func VerifyPassword(hashedPassword, plainPassword string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 }

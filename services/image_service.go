@@ -13,8 +13,11 @@ var (
 	// ErrImageNotFound 当图片不存在时
 	ErrImageNotFound = errors.New("图片不存在")
 
-	// ErrImageInUse 当图片正在被使用时
-	ErrImageInUse = errors.New("图片正在被使用中")
+	// ErrImageInUseByArticle 当图片正在被文章使用中
+	ErrImageInUseByArticle = errors.New("图片正在被文章使用中")
+
+	// ErrImageInUseByUser 当前图片正在被用户使用中
+	ErrImageInUseByUser = errors.New("图片正在被用户使用中")
 )
 
 type (
@@ -73,13 +76,20 @@ func (s *imageService) GetImageById(id string) (*models.Image, error) {
 
 func (s *imageService) DeleteImage(id string) error {
 	var image models.Image
-	// 是否存在图片
+
+	// 检查图片是否存在
 	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(&image).Error; err != nil {
 		return ErrImageNotFound
 	}
 
+	// 检查图片是否正在被使用
 	if len(image.Articles) > 0 {
-		return ErrImageInUse
+		return ErrImageInUseByArticle
+	}
+
+	// 检查图片是否正在被用户使用
+	if len(image.Users) > 0 {
+		return ErrImageInUseByUser
 	}
 
 	if err := s.db.Where("id = ?", id).Delete(&models.Image{}).Error; err != nil {

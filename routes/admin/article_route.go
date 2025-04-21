@@ -73,6 +73,10 @@ func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
 	}
 
+	if err := r.validator.Struct(body); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+	}
+
 	if err := r.articleService.UpdateArticle(id, *body); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新文章失败", err)
 	}

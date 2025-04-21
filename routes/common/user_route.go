@@ -2,6 +2,7 @@ package common
 
 import (
 	"cms/models/domain"
+	"cms/services"
 	"crypto/rsa"
 	"errors"
 	"time"
@@ -22,17 +23,19 @@ type (
 		login(c *fiber.Ctx) error
 	}
 	userRoute struct {
-		app        fiber.Router
-		validator  *validator.Validate
-		privateKey *rsa.PrivateKey
+		app         fiber.Router
+		validator   *validator.Validate
+		userService services.UserService
+		privateKey  *rsa.PrivateKey
 	}
 )
 
-func NewUserRoute(app fiber.Router, validator *validator.Validate, privateKey *rsa.PrivateKey) UserRoute {
+func NewUserRoute(app fiber.Router, userService services.UserService, validator *validator.Validate, privateKey *rsa.PrivateKey) UserRoute {
 	return &userRoute{
-		app:        app,
-		validator:  validator,
-		privateKey: privateKey,
+		app:         app,
+		validator:   validator,
+		userService: userService,
+		privateKey:  privateKey,
 	}
 }
 func (ur *userRoute) RegisterRoutes() {
@@ -49,28 +52,40 @@ func (ur *userRoute) login(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	// Throws Unauthorized error
-	if params.Username != "admin" || params.Password != "123456" {
-		return domain.ErrorResponse(c, fiber.StatusUnauthorized, "用户名或密码错误", ErrInvalidCredentials)
+	// // Throws Unauthorized error
+	// if params.Username != "admin" || params.Password != "123456" {
+	// 	return domain.ErrorResponse(c, fiber.StatusUnauthorized, "用户名或密码错误", ErrInvalidCredentials)
+	// }
+
+	user, err := ur.userService.Login(*params)
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusUnauthorized, "用户名或密码错误", err)
 	}
 
-	// Create the Claims
+	// 设置 JWT token 的过期时间
 	const tokenExpiration = time.Second * 60
+
+	// 创建 JWT token 的声明
 	claims := jwt.MapClaims{
-		"name": params.Username,
-		"exp":  time.Now().Add(tokenExpiration).Unix(),
+		"user_id": user.ID,
+		"exp":     time.Now().Add(tokenExpiration).Unix(),
 	}
 
-	// Create token
+	// 创建一个新的 JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 
-	// Generate encoded token and send it as response.
+	// 使用私钥签名 token
+	// 这里使用了 RS512 签名算法
 	t, err := token.SignedString(ur.privateKey)
 	if err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "生成 JWT 失败", err)
 	}
-	return domain.SuccessResponse(c, fiber.Map{
+
+	res := fiber.Map{
 		"token": t,
-	}, "登录成功")
+		"user":  user,
+	}
+
+	return domain.SuccessResponse(c, res, "登录成功")
 
 }

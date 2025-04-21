@@ -73,6 +73,10 @@ func (r *categoryRoute) updateCategory(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
 	}
 
+	if err := r.validator.Struct(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+	}
+
 	if err := r.categoryService.UpdateCategory(id, *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新分类失败", err)
 	}
@@ -82,8 +86,8 @@ func (r *categoryRoute) updateCategory(c *fiber.Ctx) error {
 // 删除分类
 func (r *categoryRoute) deleteCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
-	err := r.categoryService.DeleteCategory(id)
-	if err != nil {
+
+	if err := r.categoryService.DeleteCategory(id); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除分类失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除分类成功")

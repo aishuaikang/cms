@@ -1,7 +1,7 @@
 package models
 
 type Category struct {
-	ID          uint   `json:"id" gorm:"primarykey"`
+	ID          uint   `json:"id,string" gorm:"primarykey"`
 	Name        string `json:"name" gorm:"not null;unique"`
 	Description string `json:"description"`
 
