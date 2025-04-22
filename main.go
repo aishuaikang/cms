@@ -8,7 +8,7 @@ import (
 	"cms/services"
 	"cms/utils"
 
-	"github.com/goccy/go-json"
+	"github.com/bytedance/sonic"
 
 	"github.com/go-playground/validator/v10"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -41,9 +41,14 @@ func main() {
 		// StrictRouting: true,
 		ServerHeader: "cms",
 		AppName:      "cms v0.0.1",
-		JSONEncoder:  json.Marshal,
-		JSONDecoder:  json.Unmarshal,
+		JSONEncoder:  sonic.Marshal,
+		JSONDecoder:  sonic.Unmarshal,
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return domain.ErrorResponse(c, fiber.StatusInternalServerError, "服务器错误", err)
+		},
 	})
+
+	// app.Use(csrf.New())
 
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",

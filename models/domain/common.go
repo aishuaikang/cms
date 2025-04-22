@@ -5,7 +5,7 @@ import "github.com/gofiber/fiber/v2"
 type Response struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-	Error   any    `json:"error"`
+	Error   error  `json:"error"`
 	Data    any    `json:"data"`
 }
 
@@ -23,7 +23,7 @@ func ErrorResponse(ctx *fiber.Ctx, code int, message string, err error) error {
 	resp := Response{
 		Code:    code,
 		Message: message,
-		Error:   err.Error(),
+		Error:   err,
 		Data:    nil,
 	}
 

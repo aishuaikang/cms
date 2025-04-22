@@ -10,5 +10,7 @@ type User struct {
 
 	ImageID *uint `json:"image_id,string"`
 
+	Articles []Article `json:"articles"`
+
 	CommonModel
 }

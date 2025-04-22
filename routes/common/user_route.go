@@ -81,9 +81,9 @@ func (ur *userRoute) login(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "生成 JWT 失败", err)
 	}
 
-	res := fiber.Map{
-		"token": t,
-		"user":  user,
+	res := domain.LoginResponse{
+		User:  *user,
+		Token: t,
 	}
 
 	return domain.SuccessResponse(c, res, "登录成功")

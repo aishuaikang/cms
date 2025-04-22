@@ -1,5 +1,7 @@
 package domain
 
+import "cms/models"
+
 type (
 	// 用户登录参数
 	LoginParams struct {
@@ -7,6 +9,12 @@ type (
 		Password string `json:"password" validate:"required"` // 密码
 		// Captcha   string `json:"captcha" validate:"required"` // 验证码
 	}
+	// 用户登录响应
+	LoginResponse struct {
+		models.User
+		Token string `json:"token"` // token
+	}
+
 	// 添加用户参数
 	CreateUserParams struct {
 		Nickname string `json:"nickname" validate:"required"`

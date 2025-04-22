@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type (
@@ -59,7 +60,14 @@ func (r *articleRoute) createArticle(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.articleService.CreateArticle(*params); err != nil {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", nil)
+	}
+
+	if err := r.articleService.CreateArticle(uint(userID), *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "创建文章失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "创建文章成功")

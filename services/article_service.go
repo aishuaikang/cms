@@ -18,7 +18,7 @@ var (
 type (
 	ArticleService interface {
 		GetArticles() ([]*models.Article, error)
-		CreateArticle(article domain.CreateArticleParams) error
+		CreateArticle(user_id uint, article domain.CreateArticleParams) error
 		UpdateArticle(id string, article domain.UpdateArticleParams) error
 		DeleteArticle(id string) error
 	}
@@ -39,7 +39,8 @@ func (s *articleService) GetArticles() ([]*models.Article, error) {
 	return categories, nil
 }
 
-func (s *articleService) CreateArticle(article domain.CreateArticleParams) error {
+func (s *articleService) CreateArticle(user_id uint, article domain.CreateArticleParams) error {
+
 	// 检查分类是否存在
 	if err := s.db.Where("id = ?", article.CategoryID).First(&models.Category{}).Error; err != nil {
 		return ErrCategoryNotFound
@@ -68,6 +69,7 @@ func (s *articleService) CreateArticle(article domain.CreateArticleParams) error
 		Content:     article.Content,
 		CategoryID:  article.CategoryID,
 		Images:      images,
+		UserID:      user_id,
 	}
 
 	return s.db.Create(&articleModel).Error

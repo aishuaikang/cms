@@ -10,5 +10,7 @@ type Article struct {
 
 	Images []Image `json:"images" gorm:"many2many:article_images;"`
 
+	UserID uint `json:"user_id,string"`
+
 	CommonModel
 }
