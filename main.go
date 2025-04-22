@@ -43,9 +43,6 @@ func main() {
 		AppName:      "cms v0.0.1",
 		JSONEncoder:  sonic.Marshal,
 		JSONDecoder:  sonic.Unmarshal,
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return domain.ErrorResponse(c, fiber.StatusInternalServerError, "服务器错误", err)
-		},
 	})
 
 	// app.Use(csrf.New())
@@ -81,6 +78,10 @@ func main() {
 		admin.NewImageRoute(adminGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 用户
 		admin.NewUserRoute(adminGroup.Group("user"), userService, validate).RegisterRoutes()
+		// 标签
+		admin.NewTagRoute(adminGroup.Group("tag"), services.NewTagService(db), validate).RegisterRoutes()
+		// 字典
+		admin.NewDictRoute(adminGroup.Group("dict"), services.NewDictService(db), validate).RegisterRoutes()
 	}
 
 	{

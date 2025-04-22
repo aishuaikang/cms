@@ -8,6 +8,7 @@ type (
 		Content     string `json:"content" validate:"required"`
 		CategoryID  uint   `json:"category_id,string" validate:"required"`
 		ImageIds    []uint `json:"image_ids"`
+		TagIds      []uint `json:"tag_ids"`
 	}
 	// 修改文章参数
 	UpdateArticleParams struct {
@@ -15,5 +16,7 @@ type (
 		Description *string `json:"description"`
 		Content     *string `json:"content"`
 		CategoryID  *uint   `json:"category_id,string"`
+		ImageIds    []uint  `json:"image_ids"`
+		TagIds      []uint  `json:"tag_ids"`
 	}
 )

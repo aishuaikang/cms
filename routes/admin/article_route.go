@@ -3,10 +3,16 @@ package admin
 import (
 	"cms/models/domain"
 	"cms/services"
+	"errors"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+)
+
+var (
+	// 获取用户ID失败
+	ErrGetUserIDFailed = errors.New("获取用户ID失败")
 )
 
 type (
@@ -64,7 +70,7 @@ func (r *articleRoute) createArticle(c *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userID, ok := claims["user_id"].(float64)
 	if !ok {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", nil)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", ErrGetUserIDFailed)
 	}
 
 	if err := r.articleService.CreateArticle(uint(userID), *params); err != nil {

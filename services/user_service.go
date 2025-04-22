@@ -138,15 +138,13 @@ func (s *userService) UpdateUser(id string, params domain.UpdateUserParams) erro
 }
 
 func (s *userService) DeleteUser(id string) error {
+	user := new(models.User)
 	// 检查用户是否存在
-	if err := s.db.Where("id = ?", id).First(&models.User{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
 		return ErrUserNotFound
 	}
 
-	if err := s.db.Delete(&models.User{}, "id = ?", id).Error; err != nil {
-		return err
-	}
-	return nil
+	return s.db.Delete(user).Error
 }
 
 func (s *userService) Login(params domain.LoginParams) (*models.User, error) {

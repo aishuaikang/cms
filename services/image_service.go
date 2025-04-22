@@ -75,10 +75,10 @@ func (s *imageService) GetImageById(id string) (*models.Image, error) {
 }
 
 func (s *imageService) DeleteImage(id string) error {
-	var image models.Image
+	image := new(models.Image)
 
 	// 检查图片是否存在
-	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(&image).Error; err != nil {
+	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(image).Error; err != nil {
 		return ErrImageNotFound
 	}
 
@@ -92,9 +92,5 @@ func (s *imageService) DeleteImage(id string) error {
 		return ErrImageInUseByUser
 	}
 
-	if err := s.db.Where("id = ?", id).Delete(&models.Image{}).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.db.Delete(image).Error
 }

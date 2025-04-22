@@ -54,13 +54,22 @@ func (s *articleService) CreateArticle(user_id uint, article domain.CreateArticl
 	images := make([]models.Image, 0)
 
 	for _, id := range article.ImageIds {
+		image := &models.Image{}
 		// 检查图片是否存在
-		if err := s.db.Where("id = ?", id).First(&models.Image{}).Error; err != nil {
+		if err := s.db.Where("id = ?", id).First(image).Error; err != nil {
 			continue
 		}
-		images = append(images, models.Image{
-			ID: id,
-		})
+		images = append(images, *image)
+	}
+
+	tags := make([]models.Tag, 0)
+	for _, id := range article.TagIds {
+		tag := &models.Tag{}
+		// 检查标签是否存在
+		if err := s.db.Where("id = ?", id).First(tag).Error; err != nil {
+			continue
+		}
+		tags = append(tags, *tag)
 	}
 
 	articleModel := &models.Article{
@@ -69,6 +78,7 @@ func (s *articleService) CreateArticle(user_id uint, article domain.CreateArticl
 		Content:     article.Content,
 		CategoryID:  article.CategoryID,
 		Images:      images,
+		Tags:        tags,
 		UserID:      user_id,
 	}
 
@@ -108,21 +118,41 @@ func (s *articleService) UpdateArticle(id string, article domain.UpdateArticlePa
 		articleModel.CategoryID = *article.CategoryID
 	}
 
-	if article.Content != nil {
-		articleModel.Content = *article.Content
+	if article.ImageIds != nil {
+		images := make([]models.Image, 0)
+		for _, id := range article.ImageIds {
+			image := &models.Image{}
+			// 检查图片是否存在
+			if err := s.db.Where("id = ?", id).First(image).Error; err != nil {
+				continue
+			}
+			images = append(images, *image)
+		}
+		articleModel.Images = images
+	}
+
+	if article.TagIds != nil {
+		tags := make([]models.Tag, 0)
+		for _, id := range article.TagIds {
+			tag := &models.Tag{}
+			// 检查标签是否存在
+			if err := s.db.Where("id = ?", id).First(tag).Error; err != nil {
+				continue
+			}
+			tags = append(tags, *tag)
+		}
+		articleModel.Tags = tags
 	}
 
 	return s.db.Model(&models.Article{}).Where("id = ?", id).Updates(articleModel).Error
 }
 
 func (s *articleService) DeleteArticle(id string) error {
+	article := new(models.Article)
 	// 检查文章是否存在
-	if err := s.db.Where("id = ?", id).First(&models.Article{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(article).Error; err != nil {
 		return ErrArticleNotFound
 	}
 
-	if err := s.db.Delete(&models.Article{}, "id = ?", id).Error; err != nil {
-		return err
-	}
-	return nil
+	return s.db.Delete(article).Error
 }

@@ -73,13 +73,11 @@ func (s *categoryService) UpdateCategory(id string, params domain.UpdateCategory
 }
 
 func (s *categoryService) DeleteCategory(id string) error {
+	category := new(models.Category)
 	// 检查分类是否存在
-	if err := s.db.Where("id = ?", id).First(&models.Category{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(category).Error; err != nil {
 		return ErrCategoryNotFound
 	}
 
-	if err := s.db.Delete(&models.Category{}, "id = ?", id).Error; err != nil {
-		return err
-	}
-	return nil
+	return s.db.Delete(category).Error
 }
