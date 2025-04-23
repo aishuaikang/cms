@@ -11,8 +11,8 @@ import (
 var (
 	// ErrCategoryNotFound 当分类不存在时
 	ErrCategoryNotFound = errors.New("分类不存在")
-	// ErrCategoryAlreadyExists 当分类已存在时
-	ErrCategoryAlreadyExists = errors.New("分类已存在")
+	// ErrCategoryNameAlreadyExists 当分类名称已存在
+	ErrCategoryNameAlreadyExists = errors.New("分类名称已存在")
 )
 
 type (
@@ -42,7 +42,7 @@ func (s *categoryService) GetCategorys() ([]*models.Category, error) {
 func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) error {
 	// 检查分类名称是否已存在
 	if err := s.db.Where("name = ?", params.Name).First(&models.Category{}).Error; err == nil {
-		return ErrCategoryAlreadyExists
+		return ErrCategoryNameAlreadyExists
 	}
 
 	categoryModel := &models.Category{
@@ -54,22 +54,26 @@ func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) err
 }
 
 func (s *categoryService) UpdateCategory(id uint, params domain.UpdateCategoryParams) error {
+	category := new(models.Category)
+
 	// 检查分类是否存在
-	if err := s.db.Where("id = ?", id).First(&models.Category{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(category).Error; err != nil {
 		return ErrCategoryNotFound
 	}
 
-	categoryModel := &models.Category{}
-
-	if params.Name != nil {
-		categoryModel.Name = *params.Name
+	if params.Name != nil && category.Name != *params.Name {
+		// 检查分类名称是否已存在
+		if err := s.db.Where("name = ?", *params.Name).First(&models.Category{}).Error; err == nil {
+			return ErrCategoryNameAlreadyExists
+		}
+		category.Name = *params.Name
 	}
 
-	if params.Description != nil {
-		categoryModel.Description = *params.Description
+	if params.Description != nil && category.Description != *params.Description {
+		category.Description = *params.Description
 	}
 
-	return s.db.Model(&models.Category{}).Where("id = ?", id).Updates(categoryModel).Error
+	return s.db.Save(category).Error
 }
 
 func (s *categoryService) DeleteCategory(id uint) error {
