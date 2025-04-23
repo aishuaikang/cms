@@ -22,8 +22,8 @@ type (
 	TagService interface {
 		GetTags() ([]*models.Tag, error)
 		CreateTag(params domain.CreateTagParams) error
-		UpdateTag(id string, params domain.UpdateTagParams) error
-		DeleteTag(id string) error
+		UpdateTag(id uint, params domain.UpdateTagParams) error
+		DeleteTag(id uint) error
 	}
 	tagService struct {
 		db *gorm.DB
@@ -58,7 +58,7 @@ func (s *tagService) CreateTag(params domain.CreateTagParams) error {
 
 	return s.db.Create(tagModel).Error
 }
-func (s *tagService) UpdateTag(id string, params domain.UpdateTagParams) error {
+func (s *tagService) UpdateTag(id uint, params domain.UpdateTagParams) error {
 	// 检查标签是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Tag{}).Error; err != nil {
 		return ErrTagNotFound
@@ -80,7 +80,7 @@ func (s *tagService) UpdateTag(id string, params domain.UpdateTagParams) error {
 
 	return s.db.Model(&models.Tag{}).Where("id = ?", id).Updates(tagModel).Error
 }
-func (s *tagService) DeleteTag(id string) error {
+func (s *tagService) DeleteTag(id uint) error {
 	tag := new(models.Tag)
 
 	// 检查标签是否存在

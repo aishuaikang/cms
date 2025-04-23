@@ -42,8 +42,8 @@ func NewArticleRoute(app fiber.Router, articleService services.ArticleService, v
 func (r *articleRoute) RegisterRoutes() {
 	r.app.Get("/", r.getArticles)
 	r.app.Post("/", r.createArticle)
-	r.app.Put("/:id", r.updateArticle)
-	r.app.Delete("/:id", r.deleteArticle)
+	r.app.Put("/:id<int>", r.updateArticle)
+	r.app.Delete("/:id<int>", r.deleteArticle)
 }
 
 // 获取文章列表
@@ -81,7 +81,11 @@ func (r *articleRoute) createArticle(c *fiber.Ctx) error {
 
 // 更新文章
 func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
+
 	body := new(domain.UpdateArticleParams)
 	if err := c.BodyParser(body); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -91,7 +95,7 @@ func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.articleService.UpdateArticle(id, *body); err != nil {
+	if err := r.articleService.UpdateArticle(uint(id), *body); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新文章失败", err)
 	}
 
@@ -100,9 +104,12 @@ func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
 
 // 删除文章
 func (r *articleRoute) deleteArticle(c *fiber.Ctx) error {
-	id := c.Params("id")
-	err := r.articleService.DeleteArticle(id)
+	id, err := c.ParamsInt("id")
 	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
+
+	if err := r.articleService.DeleteArticle(uint(id)); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除文章失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除文章成功")

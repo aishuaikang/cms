@@ -2,6 +2,7 @@ package main
 
 import (
 	"cms/config"
+	"cms/middleware/roleauth"
 	"cms/models/domain"
 	"cms/routes/admin"
 	"cms/routes/common"
@@ -107,36 +108,40 @@ func main() {
 		panic(err)
 	}
 
+	roleAuthMiddleware := roleauth.New(userService)
+
 	{
 		// 对于所有admin路由，使用jwt中间件进行验证
 		// 这里的jwt中间件会在请求到达路由之前进行验证
 		adminGroup := api.Group("admin", jwtware.New(jwtware.Config{
 			SigningKey: jwtware.SigningKey{Key: privateKey.Public()},
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
-				return domain.ErrorResponse(c, fiber.StatusUnauthorized, "未授权", err)
+				return domain.ErrorResponse(c, fiber.StatusUnauthorized, "您的身份验证已过期，请重新登录", err)
 			},
 		}))
 
 		// 分类
-		admin.NewCategoryRoute(adminGroup.Group("category"), services.NewCategoryService(db), validate).RegisterRoutes()
+		admin.NewCategoryRoute(adminGroup.Group("category", roleAuthMiddleware), services.NewCategoryService(db), validate).RegisterRoutes()
 		// 文章
 		admin.NewArticleRoute(adminGroup.Group("article"), services.NewArticleService(db), validate).RegisterRoutes()
 		// 图片
 		admin.NewImageRoute(adminGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 用户
-		admin.NewUserRoute(adminGroup.Group("user"), userService, validate).RegisterRoutes()
+		admin.NewUserRoute(adminGroup.Group("user", roleAuthMiddleware), userService, validate).RegisterRoutes()
 		// 标签
 		admin.NewTagRoute(adminGroup.Group("tag"), services.NewTagService(db), validate).RegisterRoutes()
 		// 字典
-		admin.NewDictRoute(adminGroup.Group("dict"), services.NewDictService(db), validate).RegisterRoutes()
+		admin.NewDictRoute(adminGroup.Group("dict", roleAuthMiddleware), services.NewDictService(db), validate).RegisterRoutes()
+		// 账号
+		admin.NewAccountRoute(adminGroup.Group("account"), userService, validate).RegisterRoutes()
 	}
 
 	{
 		commonGroup := api.Group("common")
 		// 图片
 		common.NewImageRoute(commonGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
-		// 用户
-		common.NewUserRoute(commonGroup.Group("user"), userService, validate, privateKey).RegisterRoutes()
+		// 账号
+		common.NewAccountRoute(commonGroup.Group("account"), userService, validate, privateKey).RegisterRoutes()
 	}
 
 	app.Listen(":3000")

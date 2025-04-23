@@ -37,8 +37,8 @@ func NewDictRoute(app fiber.Router, dictService services.DictService, validator 
 func (r *dictRoute) RegisterRoutes() {
 	r.app.Get("/", r.getDicts)
 	r.app.Post("/", r.createDict)
-	r.app.Put("/:id", r.updateDict)
-	r.app.Delete("/:id", r.deleteDict)
+	r.app.Put("/:id<int>", r.updateDict)
+	r.app.Delete("/:id<int>", r.deleteDict)
 	r.app.Get("/getDictExtraByCode/:code", r.getDictExtraByCode)
 	r.app.Get("/getSubDictsByCode/:code", r.getSubDictsByCode)
 }
@@ -71,7 +71,11 @@ func (r *dictRoute) createDict(c *fiber.Ctx) error {
 
 // 更新字典
 func (r *dictRoute) updateDict(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
+
 	params := new(domain.UpdateDictParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -81,7 +85,7 @@ func (r *dictRoute) updateDict(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.dictService.UpdateDict(id, *params); err != nil {
+	if err := r.dictService.UpdateDict(uint(id), *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新字典失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "更新字典成功")
@@ -89,9 +93,12 @@ func (r *dictRoute) updateDict(c *fiber.Ctx) error {
 
 // 删除字典
 func (r *dictRoute) deleteDict(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
 
-	if err := r.dictService.DeleteDict(id); err != nil {
+	if err := r.dictService.DeleteDict(uint(id)); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除字典失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除字典成功")

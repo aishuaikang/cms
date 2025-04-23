@@ -19,8 +19,8 @@ type (
 	CategoryService interface {
 		GetCategorys() ([]*models.Category, error)
 		CreateCategory(params domain.CreateCategoryParams) error
-		UpdateCategory(id string, params domain.UpdateCategoryParams) error
-		DeleteCategory(id string) error
+		UpdateCategory(id uint, params domain.UpdateCategoryParams) error
+		DeleteCategory(id uint) error
 	}
 	categoryService struct {
 		db *gorm.DB
@@ -53,7 +53,7 @@ func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) err
 	return s.db.Create(&categoryModel).Error
 }
 
-func (s *categoryService) UpdateCategory(id string, params domain.UpdateCategoryParams) error {
+func (s *categoryService) UpdateCategory(id uint, params domain.UpdateCategoryParams) error {
 	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Category{}).Error; err != nil {
 		return ErrCategoryNotFound
@@ -72,7 +72,7 @@ func (s *categoryService) UpdateCategory(id string, params domain.UpdateCategory
 	return s.db.Model(&models.Category{}).Where("id = ?", id).Updates(categoryModel).Error
 }
 
-func (s *categoryService) DeleteCategory(id string) error {
+func (s *categoryService) DeleteCategory(id uint) error {
 	category := new(models.Category)
 	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(category).Error; err != nil {

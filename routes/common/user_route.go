@@ -4,7 +4,6 @@ import (
 	"cms/models/domain"
 	"cms/services"
 	"crypto/rsa"
-	"errors"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -12,17 +11,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var (
-	// ErrInvalidCredentials 用户名或密码错误
-	ErrInvalidCredentials = errors.New("用户名或密码错误")
-)
-
 type (
-	UserRoute interface {
+	AccountRoute interface {
 		RegisterRoutes()
 		login(c *fiber.Ctx) error
 	}
-	userRoute struct {
+	accountRoute struct {
 		app         fiber.Router
 		validator   *validator.Validate
 		userService services.UserService
@@ -30,19 +24,19 @@ type (
 	}
 )
 
-func NewUserRoute(app fiber.Router, userService services.UserService, validator *validator.Validate, privateKey *rsa.PrivateKey) UserRoute {
-	return &userRoute{
+func NewAccountRoute(app fiber.Router, userService services.UserService, validator *validator.Validate, privateKey *rsa.PrivateKey) AccountRoute {
+	return &accountRoute{
 		app:         app,
 		validator:   validator,
 		userService: userService,
 		privateKey:  privateKey,
 	}
 }
-func (ur *userRoute) RegisterRoutes() {
+func (ur *accountRoute) RegisterRoutes() {
 	ur.app.Post("/login", ur.login)
 }
 
-func (ur *userRoute) login(c *fiber.Ctx) error {
+func (ur *accountRoute) login(c *fiber.Ctx) error {
 	params := new(domain.LoginParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)

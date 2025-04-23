@@ -25,8 +25,8 @@ type (
 		GetImages() ([]*models.Image, error)
 		CreateImage(image domain.CreateImageParams) (*models.Image, error)
 		GetImageByHash(hash uint64) (*models.Image, error)
-		GetImageById(id string) (*models.Image, error)
-		DeleteImage(id string) error
+		GetImageById(id uint) (*models.Image, error)
+		DeleteImage(id uint) error
 	}
 	imageService struct {
 		db *gorm.DB
@@ -66,7 +66,7 @@ func (s *imageService) GetImageByHash(hash uint64) (*models.Image, error) {
 	return &image, nil
 }
 
-func (s *imageService) GetImageById(id string) (*models.Image, error) {
+func (s *imageService) GetImageById(id uint) (*models.Image, error) {
 	var image models.Image
 	if err := s.db.Where("id = ?", id).First(&image).Error; err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *imageService) GetImageById(id string) (*models.Image, error) {
 	return &image, nil
 }
 
-func (s *imageService) DeleteImage(id string) error {
+func (s *imageService) DeleteImage(id uint) error {
 	image := new(models.Image)
 
 	// 检查图片是否存在

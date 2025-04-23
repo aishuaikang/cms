@@ -19,8 +19,8 @@ type (
 	ArticleService interface {
 		GetArticles() ([]*models.Article, error)
 		CreateArticle(user_id uint, article domain.CreateArticleParams) error
-		UpdateArticle(id string, article domain.UpdateArticleParams) error
-		DeleteArticle(id string) error
+		UpdateArticle(id uint, article domain.UpdateArticleParams) error
+		DeleteArticle(id uint) error
 	}
 	articleService struct {
 		db *gorm.DB
@@ -85,7 +85,7 @@ func (s *articleService) CreateArticle(user_id uint, article domain.CreateArticl
 	return s.db.Create(&articleModel).Error
 }
 
-func (s *articleService) UpdateArticle(id string, article domain.UpdateArticleParams) error {
+func (s *articleService) UpdateArticle(id uint, article domain.UpdateArticleParams) error {
 	// 检查分类是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Article{}).Error; err != nil {
 		return ErrArticleNotFound
@@ -147,7 +147,7 @@ func (s *articleService) UpdateArticle(id string, article domain.UpdateArticlePa
 	return s.db.Model(&models.Article{}).Where("id = ?", id).Updates(articleModel).Error
 }
 
-func (s *articleService) DeleteArticle(id string) error {
+func (s *articleService) DeleteArticle(id uint) error {
 	article := new(models.Article)
 	// 检查文章是否存在
 	if err := s.db.Where("id = ?", id).First(article).Error; err != nil {

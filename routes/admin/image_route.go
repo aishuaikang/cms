@@ -46,7 +46,7 @@ func NewImageRoute(app fiber.Router, imageService services.ImageService, validat
 func (ir *imageRoute) RegisterRoutes() {
 	ir.app.Get("/", ir.getImages)
 	ir.app.Post("/", ir.createImage)
-	ir.app.Delete("/:id", ir.deleteImage)
+	ir.app.Delete("/:id<int>", ir.deleteImage)
 }
 
 func (ir *imageRoute) getImages(c *fiber.Ctx) error {
@@ -130,9 +130,12 @@ func (ir *imageRoute) createImage(c *fiber.Ctx) error {
 }
 
 func (ir *imageRoute) deleteImage(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
 
-	if err := ir.imageService.DeleteImage(id); err != nil {
+	if err := ir.imageService.DeleteImage(uint(id)); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除图片失败", err)
 	}
 

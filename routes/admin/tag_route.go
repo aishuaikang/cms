@@ -35,8 +35,8 @@ func NewTagRoute(app fiber.Router, tagService services.TagService, validator *va
 func (r *tagRoute) RegisterRoutes() {
 	r.app.Get("/", r.getTags)
 	r.app.Post("/", r.createTag)
-	r.app.Put("/:id", r.updateTag)
-	r.app.Delete("/:id", r.deleteTag)
+	r.app.Put("/:id<int>", r.updateTag)
+	r.app.Delete("/:id<int>", r.deleteTag)
 }
 
 // 获取标签列表
@@ -68,7 +68,10 @@ func (r *tagRoute) createTag(c *fiber.Ctx) error {
 
 // 更新标签
 func (r *tagRoute) updateTag(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
 	params := new(domain.UpdateTagParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -78,7 +81,7 @@ func (r *tagRoute) updateTag(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.tagService.UpdateTag(id, *params); err != nil {
+	if err := r.tagService.UpdateTag(uint(id), *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新标签失败", err)
 	}
 
@@ -87,9 +90,12 @@ func (r *tagRoute) updateTag(c *fiber.Ctx) error {
 
 // 删除标签
 func (r *tagRoute) deleteTag(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
 
-	if err := r.tagService.DeleteTag(id); err != nil {
+	if err := r.tagService.DeleteTag(uint(id)); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除标签失败", err)
 	}
 

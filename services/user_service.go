@@ -27,10 +27,12 @@ type (
 	UserService interface {
 		GetUsers() ([]*models.User, error)
 		CreateUser(params domain.CreateUserParams) error
-		UpdateUser(id string, params domain.UpdateUserParams) error
-		DeleteUser(id string) error
+		UpdateUser(id uint, params domain.UpdateUserParams) error
+		DeleteUser(id uint) error
 		Login(params domain.LoginParams) (*models.User, error)
 		CreateInitialUser(initialUsername, initialPassword string) error
+		// 根据用户id获取是否是超级管理员
+		GetUserIsSuper(id uint) (bool, error)
 	}
 	userService struct {
 		db *gorm.DB
@@ -84,33 +86,32 @@ func (s *userService) CreateUser(user domain.CreateUserParams) error {
 	return s.db.Create(&categoryModel).Error
 }
 
-func (s *userService) UpdateUser(id string, params domain.UpdateUserParams) error {
+func (s *userService) UpdateUser(id uint, params domain.UpdateUserParams) error {
+	user := new(models.User)
 	// 检查用户是否存在
-	if err := s.db.Where("id = ?", id).First(&models.User{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
 		return ErrUserNotFound
 	}
 
-	userModel := &models.User{}
-
-	// 检查用户名是否已存在
-	if params.Username != nil {
+	if params.Username != nil && user.Username != *params.Username {
+		// 检查用户名是否已存在
 		if err := s.db.Where("username = ?", *params.Username).First(&models.User{}).Error; err == nil {
 			return ErrUsernameExists
 		}
 
-		userModel.Username = *params.Username
+		user.Username = *params.Username
 	}
 
-	// 检查手机号是否已存在
-	if params.Phone != nil {
+	if params.Phone != nil && user.Phone != *params.Phone {
+		// 检查手机号是否已存在
 		if err := s.db.Where("phone = ?", *params.Phone).First(&models.User{}).Error; err == nil {
 			return ErrPhoneExists
 		}
-		userModel.Phone = *params.Phone
+		user.Phone = *params.Phone
 	}
 
-	if params.Nickname != nil {
-		userModel.Nickname = *params.Nickname
+	if params.Nickname != nil && user.Nickname != *params.Nickname {
+		user.Nickname = *params.Nickname
 	}
 
 	if params.Password != nil {
@@ -119,25 +120,25 @@ func (s *userService) UpdateUser(id string, params domain.UpdateUserParams) erro
 		if err != nil {
 			return err
 		}
-		userModel.Password = string(hashedPassword)
+		user.Password = string(hashedPassword)
 	}
 
-	if params.Nickname != nil {
-		userModel.Nickname = *params.Nickname
+	if params.Nickname != nil && user.Nickname != *params.Nickname {
+		user.Nickname = *params.Nickname
 	}
 
-	if params.ImageID != nil {
+	if params.ImageID != nil && user.ImageID != params.ImageID {
 		// 检查图片是否存在
 		if err := s.db.Where("id = ?", *params.ImageID).First(&models.Image{}).Error; err != nil {
 			return ErrImageNotFound
 		}
-		userModel.ImageID = params.ImageID
+		user.ImageID = params.ImageID
 	}
 
-	return s.db.Model(&models.User{}).Where("id = ?", id).Updates(userModel).Error
+	return s.db.Save(user).Error
 }
 
-func (s *userService) DeleteUser(id string) error {
+func (s *userService) DeleteUser(id uint) error {
 	user := new(models.User)
 	// 检查用户是否存在
 	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
@@ -178,12 +179,22 @@ func (s *userService) CreateInitialUser(initialUsername, initialPassword string)
 	}
 
 	user := &models.User{
-		Nickname: "admin",
-		Phone:    "12345678901",
+		Nickname: "ask",
+		Phone:    "18333435634",
 		Username: initialUsername,
 		Password: string(hashedPassword),
 		IsSuper:  true,
 	}
 
 	return s.db.Create(user).Error
+}
+
+func (s *userService) GetUserIsSuper(id uint) (bool, error) {
+	user := new(models.User)
+	// 检查用户是否存在
+	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
+		return false, ErrUserNotFound
+	}
+
+	return user.IsSuper, nil
 }

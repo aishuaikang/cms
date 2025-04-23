@@ -6,8 +6,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
@@ -22,7 +20,6 @@ type (
 		createUser(c *fiber.Ctx) error
 		updateUser(c *fiber.Ctx) error
 		deleteUser(c *fiber.Ctx) error
-		logout(c *fiber.Ctx) error
 	}
 	userRoute struct {
 		app         fiber.Router
@@ -43,10 +40,8 @@ func NewUserRoute(app fiber.Router, userService services.UserService, validator 
 func (r *userRoute) RegisterRoutes() {
 	r.app.Get("/", r.getUsers)
 	r.app.Post("/", r.createUser)
-	r.app.Put("/:id", r.updateUser)
-	r.app.Delete("/:id", r.deleteUser)
-	r.app.Post("/logout", r.logout)
-
+	r.app.Put("/:id<int>", r.updateUser)
+	r.app.Delete("/:id<int>", r.deleteUser)
 }
 
 func (r *userRoute) getUsers(c *fiber.Ctx) error {
@@ -78,8 +73,12 @@ func (r *userRoute) createUser(c *fiber.Ctx) error {
 
 // 删除用户
 func (ur *userRoute) deleteUser(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if err := ur.userService.DeleteUser(id); err != nil {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
+
+	if err := ur.userService.DeleteUser(uint(id)); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除用户失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除用户成功")
@@ -87,7 +86,10 @@ func (ur *userRoute) deleteUser(c *fiber.Ctx) error {
 
 // 更新用户
 func (ur *userRoute) updateUser(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
 	params := new(domain.UpdateUserParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -97,15 +99,8 @@ func (ur *userRoute) updateUser(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := ur.userService.UpdateUser(id, *params); err != nil {
+	if err := ur.userService.UpdateUser(uint(id), *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新用户失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "更新用户成功")
-}
-
-// 登出
-func (ur *userRoute) logout(c *fiber.Ctx) error {
-	user := c.Locals("user").(*jwt.Token)
-	log.Info("用户 %s 登出", user)
-	return domain.SuccessResponse(c, fiber.Map{}, "登出成功")
 }

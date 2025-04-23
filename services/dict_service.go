@@ -23,8 +23,8 @@ type (
 	DictService interface {
 		GetDicts() ([]*models.Dict, error)
 		CreateDict(params domain.CreateDictParams) error
-		UpdateDict(id string, params domain.UpdateDictParams) error
-		DeleteDict(id string) error
+		UpdateDict(id uint, params domain.UpdateDictParams) error
+		DeleteDict(id uint) error
 		GetDictExtraByCode(code string) (string, error)
 		GetSubDictsByCode(code string) ([]*models.Dict, error)
 	}
@@ -66,7 +66,7 @@ func (s *dictService) CreateDict(params domain.CreateDictParams) error {
 	return s.db.Create(&dictModel).Error
 }
 
-func (s *dictService) UpdateDict(id string, params domain.UpdateDictParams) error {
+func (s *dictService) UpdateDict(id uint, params domain.UpdateDictParams) error {
 	// 检查字典是否存在
 	if err := s.db.Where("id = ?", id).First(&models.Dict{}).Error; err != nil {
 		return ErrDictNotFound
@@ -105,7 +105,7 @@ func (s *dictService) UpdateDict(id string, params domain.UpdateDictParams) erro
 	return s.db.Model(&models.Dict{}).Where("id = ?", id).Updates(dictModel).Error
 }
 
-func (s *dictService) DeleteDict(id string) error {
+func (s *dictService) DeleteDict(id uint) error {
 	dict := new(models.Dict)
 	// 检查字典是否存在
 	if err := s.db.Where("id = ?", id).First(dict).Error; err != nil {

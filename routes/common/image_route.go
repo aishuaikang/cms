@@ -32,13 +32,16 @@ func NewImageRoute(app fiber.Router, imageService services.ImageService, validat
 }
 
 func (ir *imageRoute) RegisterRoutes() {
-	ir.app.Get("/download/:id", ir.downloadImageById)
+	ir.app.Get("/download/:id<int>", ir.downloadImageById)
 
 }
 
 func (ir *imageRoute) downloadImageById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	image, err := ir.imageService.GetImageById(id)
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+	}
+	image, err := ir.imageService.GetImageById(uint(id))
 	if err != nil {
 		return domain.ErrorResponse(c, fiber.StatusNotFound, "图片不存在", err)
 	}
