@@ -67,42 +67,41 @@ func (s *dictService) CreateDict(params domain.CreateDictParams) error {
 }
 
 func (s *dictService) UpdateDict(id uint, params domain.UpdateDictParams) error {
+	dict := new(models.Dict)
 	// 检查字典是否存在
-	if err := s.db.Where("id = ?", id).First(&models.Dict{}).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(dict).Error; err != nil {
 		return ErrDictNotFound
 	}
 
-	dictModel := new(models.Dict)
-
-	if params.Name != nil {
+	if params.Name != nil && dict.Name != *params.Name {
 		// 检查字典名称是否已存在
 		if err := s.db.Where("name = ?", *params.Name).First(&models.Dict{}).Error; err == nil {
 			return ErrDictNameAlreadyExists
 		}
-		dictModel.Name = *params.Name
+		dict.Name = *params.Name
 	}
 
-	if params.Code != nil {
+	if params.Code != nil && dict.Code != *params.Code {
 		// 检查字典code是否已存在
 		if err := s.db.Where("code = ?", *params.Code).First(&models.Dict{}).Error; err == nil {
 			return ErrDictCodeAlreadyExists
 		}
-		dictModel.Code = *params.Code
+		dict.Code = *params.Code
 	}
 
-	if params.Extra != nil {
-		dictModel.Extra = *params.Extra
+	if params.Extra != nil && dict.Extra != *params.Extra {
+		dict.Extra = *params.Extra
 	}
 
-	if params.Description != nil {
-		dictModel.Description = *params.Description
+	if params.Description != nil && dict.Description != *params.Description {
+		dict.Description = *params.Description
 	}
 
-	if params.ParentID != nil {
-		dictModel.ParentID = params.ParentID
-	}
+	// if params.ParentID != nil {
+	// 	dictModel.ParentID = params.ParentID
+	// }
 
-	return s.db.Model(&models.Dict{}).Where("id = ?", id).Updates(dictModel).Error
+	return s.db.Save(dict).Error
 }
 
 func (s *dictService) DeleteDict(id uint) error {

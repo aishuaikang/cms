@@ -15,6 +15,6 @@ type (
 		Code        *string `json:"code"`
 		Extra       *string `json:"extra"`
 		Description *string `json:"description"`
-		ParentID    *uint   `json:"parent_id,string"`
+		// ParentID    *uint   `json:"parent_id,string"`
 	}
 )
