@@ -4,19 +4,22 @@ import (
 	"cms/models"
 	"cms/models/domain"
 	"errors"
+	"fmt"
+	"os"
+	"path"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 var (
-	// ErrImageNotFound 当图片不存在时
+	// ErrImageNotFound 图片不存在时
 	ErrImageNotFound = errors.New("图片不存在")
 
-	// ErrImageInUseByArticle 当图片正在被文章使用中
+	// ErrImageInUseByArticle 图片正在被文章使用中
 	ErrImageInUseByArticle = errors.New("图片正在被文章使用中")
 
-	// ErrImageInUseByUser 当前图片正在被用户使用中
+	// ErrImageInUseByUser 图片正在被用户使用中
 	ErrImageInUseByUser = errors.New("图片正在被用户使用中")
 )
 
@@ -26,7 +29,7 @@ type (
 		CreateImage(image domain.CreateImageParams) (*models.Image, error)
 		GetImageByHash(hash uint64) (*models.Image, error)
 		GetImageById(id uint) (*models.Image, error)
-		DeleteImage(id uint) error
+		DeleteImage(id uint, uploadPath string) error
 	}
 	imageService struct {
 		db *gorm.DB
@@ -74,7 +77,7 @@ func (s *imageService) GetImageById(id uint) (*models.Image, error) {
 	return &image, nil
 }
 
-func (s *imageService) DeleteImage(id uint) error {
+func (s *imageService) DeleteImage(id uint, uploadPath string) error {
 	image := new(models.Image)
 
 	// 检查图片是否存在
@@ -90,6 +93,11 @@ func (s *imageService) DeleteImage(id uint) error {
 	// 检查图片是否正在被用户使用
 	if len(image.Users) > 0 {
 		return ErrImageInUseByUser
+	}
+
+	// 删除本地文件
+	if err := os.Remove(path.Join(uploadPath, fmt.Sprintf("%v", id))); err != nil {
+		return err
 	}
 
 	return s.db.Delete(image).Error

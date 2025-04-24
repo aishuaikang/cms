@@ -32,14 +32,30 @@ type (
 		app          fiber.Router
 		imageService services.ImageService
 		validator    *validator.Validate
+		uploadPath   string
 	}
 )
 
 func NewImageRoute(app fiber.Router, imageService services.ImageService, validator *validator.Validate) ImageRoute {
+	// 判断文件夹是否存在
+	absPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	uploadPath := path.Join(absPath, "uploads")
+	if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
+		// 创建文件夹
+		if err := os.Mkdir(uploadPath, os.ModePerm); err != nil {
+			panic(err)
+		}
+	}
+
 	return &imageRoute{
 		app:          app,
 		imageService: imageService,
 		validator:    validator,
+		uploadPath:   uploadPath,
 	}
 }
 
@@ -66,20 +82,6 @@ func (ir *imageRoute) createImage(c *fiber.Ctx) error {
 	fhs, ok := formData.File["image"]
 	if !ok {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "图片为空", ErrImageEmpty)
-	}
-
-	// 判断文件夹是否存在
-	absPath, err := os.Getwd()
-	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取绝对路径失败", err)
-	}
-
-	uploadPath := path.Join(absPath, "uploads")
-	if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
-		// 创建文件夹
-		if err := os.Mkdir(uploadPath, os.ModePerm); err != nil {
-			return domain.ErrorResponse(c, fiber.StatusNotFound, "创建文件夹失败", err)
-		}
 	}
 
 	res := make(domain.CreateImageResponse, 0)
@@ -110,7 +112,7 @@ func (ir *imageRoute) createImage(c *fiber.Ctx) error {
 			continue
 		}
 
-		if err = c.SaveFile(fh, path.Join(uploadPath, fmt.Sprintf("%v", hashSum))); err != nil {
+		if err = c.SaveFile(fh, path.Join(ir.uploadPath, fmt.Sprintf("%v", hashSum))); err != nil {
 			return domain.ErrorResponse(c, fiber.StatusInternalServerError, "保存图片失败", err)
 		}
 
@@ -135,7 +137,7 @@ func (ir *imageRoute) deleteImage(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
 	}
 
-	if err := ir.imageService.DeleteImage(uint(id)); err != nil {
+	if err := ir.imageService.DeleteImage(uint(id), ir.uploadPath); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除图片失败", err)
 	}
 

@@ -1,10 +1,18 @@
 package models
 
+type ArticleStatus uint8
+
+const (
+	StatusDraft ArticleStatus = iota
+	StatusPublished
+)
+
 type Article struct {
-	ID          uint   `json:"id,string" gorm:"primary_key"`
-	Title       string `json:"title" gorm:"not null;unique"`
-	Description string `json:"description"`
-	Content     string `json:"content"`
+	ID          uint          `json:"id,string" gorm:"primary_key"`
+	Title       string        `json:"title" gorm:"not null;unique"`
+	Description string        `json:"description"`
+	Content     string        `json:"content"`
+	Status      ArticleStatus `json:"status"`
 
 	CategoryID uint `json:"category_id,string"`
 

@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	// ErrArticleNotFound 当文章不存在时
+	// ErrArticleNotFound 文章不存在时
 	ErrArticleNotFound = errors.New("文章不存在")
-	// ErrArticleAlreadyExists 当文章已存在时
+	// ErrArticleAlreadyExists 文章已存在时
 	ErrArticleAlreadyExists = errors.New("文章已存在")
 )
 

@@ -6,13 +6,16 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
-	// ErrCategoryNotFound 当分类不存在时
+	// ErrCategoryNotFound 分类不存在时
 	ErrCategoryNotFound = errors.New("分类不存在")
-	// ErrCategoryNameAlreadyExists 当分类名称已存在
+	// ErrCategoryNameAlreadyExists 分类名称已存在
 	ErrCategoryNameAlreadyExists = errors.New("分类名称已存在")
+	// ErrCategoryHasArticles 分类下存在文章
+	ErrCategoryHasArticles = errors.New("分类下存在文章")
 )
 
 type (
@@ -79,8 +82,12 @@ func (s *categoryService) UpdateCategory(id uint, params domain.UpdateCategoryPa
 func (s *categoryService) DeleteCategory(id uint) error {
 	category := new(models.Category)
 	// 检查分类是否存在
-	if err := s.db.Where("id = ?", id).First(category).Error; err != nil {
+	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(category).Error; err != nil {
 		return ErrCategoryNotFound
+	}
+
+	if len(category.Articles) > 0 {
+		return ErrCategoryHasArticles
 	}
 
 	return s.db.Delete(category).Error

@@ -57,7 +57,7 @@ func (ur *accountRoute) login(c *fiber.Ctx) error {
 	}
 
 	// 设置 JWT token 的过期时间
-	const tokenExpiration = time.Second * 60
+	const tokenExpiration = time.Hour * 1
 
 	// 创建 JWT token 的声明
 	claims := jwt.MapClaims{
