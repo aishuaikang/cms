@@ -1,6 +1,10 @@
 package domain
 
-import "cms/models"
+import (
+	"cms/models"
+
+	"github.com/google/uuid"
+)
 
 type (
 	// 用户登录参数
@@ -17,19 +21,19 @@ type (
 
 	// 添加用户参数
 	CreateUserParams struct {
-		Nickname string `json:"nickname" validate:"required"`
-		Phone    string `json:"phone" validate:"required"`
-		Username string `json:"username" validate:"required"`
-		Password string `json:"password" validate:"required"`
-		ImageID  *uint  `json:"image_id,string"`
+		Nickname string     `json:"nickname" validate:"required"`
+		Phone    string     `json:"phone" validate:"required"`
+		Username string     `json:"username" validate:"required"`
+		Password string     `json:"password" validate:"required"`
+		ImageID  *uuid.UUID `json:"image_id"`
 	}
 
 	// 更新用户参数
 	UpdateUserParams struct {
-		Nickname *string `json:"nickname"`
-		Phone    *string `json:"phone"`
-		Username *string `json:"username"`
-		Password *string `json:"password"`
-		ImageID  *uint   `json:"image_id,string"`
+		Nickname *string    `json:"nickname"`
+		Phone    *string    `json:"phone"`
+		Username *string    `json:"username"`
+		Password *string    `json:"password"`
+		ImageID  *uuid.UUID `json:"image_id"`
 	}
 )

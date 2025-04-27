@@ -1,6 +1,10 @@
 package domain
 
-import "cms/models"
+import (
+	"cms/models"
+
+	"github.com/google/uuid"
+)
 
 type (
 	// 添加文章参数
@@ -8,18 +12,19 @@ type (
 		Title       string               `json:"title" validate:"required"`
 		Description string               `json:"description" validate:"required"`
 		Content     string               `json:"content" validate:"required"`
-		CategoryID  uint                 `json:"category_id,string" validate:"required"`
+		CategoryID  uuid.UUID            `json:"category_id" validate:"required"`
 		Status      models.ArticleStatus `json:"status" validate:"required,oneof=0 1"`
-		ImageIds    []uint               `json:"image_ids"`
-		TagIds      []uint               `json:"tag_ids"`
+		ImageIds    []uuid.UUID          `json:"image_ids"`
+		TagIds      []uuid.UUID          `json:"tag_ids"`
 	}
 	// 修改文章参数
 	UpdateArticleParams struct {
-		Title       *string `json:"title"`
-		Description *string `json:"description"`
-		Content     *string `json:"content"`
-		CategoryID  *uint   `json:"category_id,string"`
-		ImageIds    []uint  `json:"image_ids"`
-		TagIds      []uint  `json:"tag_ids"`
+		Title       *string               `json:"title"`
+		Description *string               `json:"description"`
+		Content     *string               `json:"content"`
+		CategoryID  *uuid.UUID            `json:"category_id"`
+		Status      *models.ArticleStatus `json:"status"`
+		ImageIds    []uuid.UUID           `json:"image_ids"`
+		TagIds      []uuid.UUID           `json:"tag_ids"`
 	}
 )

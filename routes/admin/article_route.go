@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -42,8 +43,8 @@ func NewArticleRoute(app fiber.Router, articleService services.ArticleService, v
 func (r *articleRoute) RegisterRoutes() {
 	r.app.Get("/", r.getArticles)
 	r.app.Post("/", r.createArticle)
-	r.app.Put("/:id<int>", r.updateArticle)
-	r.app.Delete("/:id<int>", r.deleteArticle)
+	r.app.Put("/:id<guid>", r.updateArticle)
+	r.app.Delete("/:id<guid>", r.deleteArticle)
 }
 
 // 获取文章列表
@@ -68,12 +69,12 @@ func (r *articleRoute) createArticle(c *fiber.Ctx) error {
 
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	userID, ok := claims["user_id"].(float64)
-	if !ok {
+	userID, err := uuid.Parse(claims["user_id"].(string))
+	if err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", ErrGetUserIDFailed)
 	}
 
-	if err := r.articleService.CreateArticle(uint(userID), *params); err != nil {
+	if err := r.articleService.CreateArticle(userID, *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "创建文章失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "创建文章成功")
@@ -81,9 +82,9 @@ func (r *articleRoute) createArticle(c *fiber.Ctx) error {
 
 // 更新文章
 func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
 	body := new(domain.UpdateArticleParams)
@@ -95,7 +96,7 @@ func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.articleService.UpdateArticle(uint(id), *body); err != nil {
+	if err := r.articleService.UpdateArticle(id, *body); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新文章失败", err)
 	}
 
@@ -104,12 +105,12 @@ func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
 
 // 删除文章
 func (r *articleRoute) deleteArticle(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
-	if err := r.articleService.DeleteArticle(uint(id)); err != nil {
+	if err := r.articleService.DeleteArticle(id); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除文章失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除文章成功")

@@ -5,6 +5,7 @@ import (
 	"cms/models/domain"
 	"errors"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -22,8 +23,8 @@ type (
 	CategoryService interface {
 		GetCategorys() ([]*models.Category, error)
 		CreateCategory(params domain.CreateCategoryParams) error
-		UpdateCategory(id uint, params domain.UpdateCategoryParams) error
-		DeleteCategory(id uint) error
+		UpdateCategory(id uuid.UUID, params domain.UpdateCategoryParams) error
+		DeleteCategory(id uuid.UUID) error
 	}
 	categoryService struct {
 		db *gorm.DB
@@ -56,7 +57,7 @@ func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) err
 	return s.db.Create(&categoryModel).Error
 }
 
-func (s *categoryService) UpdateCategory(id uint, params domain.UpdateCategoryParams) error {
+func (s *categoryService) UpdateCategory(id uuid.UUID, params domain.UpdateCategoryParams) error {
 	category := new(models.Category)
 
 	// 检查分类是否存在
@@ -79,7 +80,7 @@ func (s *categoryService) UpdateCategory(id uint, params domain.UpdateCategoryPa
 	return s.db.Save(category).Error
 }
 
-func (s *categoryService) DeleteCategory(id uint) error {
+func (s *categoryService) DeleteCategory(id uuid.UUID) error {
 	category := new(models.Category)
 	// 检查分类是否存在
 	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(category).Error; err != nil {

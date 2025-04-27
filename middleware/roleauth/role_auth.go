@@ -7,17 +7,23 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrUserNotFound = errors.New("用户未找到")
 )
 
 func New(userService services.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
-		userID, ok := claims["user_id"].(float64)
-		if !ok {
-			return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", errors.New("获取用户ID失败"))
+		userID, err := uuid.Parse(claims["user_id"].(string))
+		if err != nil {
+			return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", ErrUserNotFound)
 		}
-		isSuper, err := userService.GetUserIsSuper(uint(userID))
+
+		isSuper, err := userService.GetUserIsSuper(userID)
 		if err != nil {
 			return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取用户角色失败", err)
 		}

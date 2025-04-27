@@ -5,6 +5,7 @@ import (
 	"cms/models/domain"
 	"errors"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -22,8 +23,8 @@ type (
 	TagService interface {
 		GetTags() ([]*models.Tag, error)
 		CreateTag(params domain.CreateTagParams) error
-		UpdateTag(id uint, params domain.UpdateTagParams) error
-		DeleteTag(id uint) error
+		UpdateTag(id uuid.UUID, params domain.UpdateTagParams) error
+		DeleteTag(id uuid.UUID) error
 	}
 	tagService struct {
 		db *gorm.DB
@@ -58,7 +59,7 @@ func (s *tagService) CreateTag(params domain.CreateTagParams) error {
 
 	return s.db.Create(tagModel).Error
 }
-func (s *tagService) UpdateTag(id uint, params domain.UpdateTagParams) error {
+func (s *tagService) UpdateTag(id uuid.UUID, params domain.UpdateTagParams) error {
 	tag := new(models.Tag)
 
 	// 检查标签是否存在
@@ -80,7 +81,7 @@ func (s *tagService) UpdateTag(id uint, params domain.UpdateTagParams) error {
 
 	return s.db.Save(tag).Error
 }
-func (s *tagService) DeleteTag(id uint) error {
+func (s *tagService) DeleteTag(id uuid.UUID) error {
 	tag := new(models.Tag)
 
 	// 检查标签是否存在

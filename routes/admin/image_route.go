@@ -14,6 +14,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/google/uuid"
 )
 
 var (
@@ -62,7 +63,7 @@ func NewImageRoute(app fiber.Router, imageService services.ImageService, validat
 func (ir *imageRoute) RegisterRoutes() {
 	ir.app.Get("/", ir.getImages)
 	ir.app.Post("/", ir.createImage)
-	ir.app.Delete("/:id<int>", ir.deleteImage)
+	ir.app.Delete("/:id<guid>", ir.deleteImage)
 }
 
 func (ir *imageRoute) getImages(c *fiber.Ctx) error {
@@ -132,12 +133,12 @@ func (ir *imageRoute) createImage(c *fiber.Ctx) error {
 }
 
 func (ir *imageRoute) deleteImage(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
-	if err := ir.imageService.DeleteImage(uint(id), ir.uploadPath); err != nil {
+	if err := ir.imageService.DeleteImage(id, ir.uploadPath); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除图片失败", err)
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type (
@@ -37,8 +38,8 @@ func NewDictRoute(app fiber.Router, dictService services.DictService, validator 
 func (r *dictRoute) RegisterRoutes() {
 	r.app.Get("/", r.getDicts)
 	r.app.Post("/", r.createDict)
-	r.app.Put("/:id<int>", r.updateDict)
-	r.app.Delete("/:id<int>", r.deleteDict)
+	r.app.Put("/:id<guid>", r.updateDict)
+	r.app.Delete("/:id<guid>", r.deleteDict)
 	r.app.Get("/getDictExtraByCode/:code", r.getDictExtraByCode)
 	r.app.Get("/getSubDictsByCode/:code", r.getSubDictsByCode)
 }
@@ -71,9 +72,9 @@ func (r *dictRoute) createDict(c *fiber.Ctx) error {
 
 // 更新字典
 func (r *dictRoute) updateDict(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
 	params := new(domain.UpdateDictParams)
@@ -85,7 +86,7 @@ func (r *dictRoute) updateDict(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.dictService.UpdateDict(uint(id), *params); err != nil {
+	if err := r.dictService.UpdateDict(id, *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新字典失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "更新字典成功")
@@ -93,12 +94,12 @@ func (r *dictRoute) updateDict(c *fiber.Ctx) error {
 
 // 删除字典
 func (r *dictRoute) deleteDict(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
-	if err := r.dictService.DeleteDict(uint(id)); err != nil {
+	if err := r.dictService.DeleteDict(id); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除字典失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除字典成功")

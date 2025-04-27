@@ -34,14 +34,16 @@ func InitDB() (*gorm.DB, error) {
 		DontSupportRenameIndex:    true,               // drop & create index when rename index, rename index not supported before MySQL 5.7, MariaDB
 		DontSupportRenameColumn:   true,               // use change when rename column, rename rename not supported before MySQL 8, MariaDB
 		SkipInitializeWithVersion: false,              // smart configure based on used version
-	}), &gorm.Config{})
+	}), &gorm.Config{
+		// DisableForeignKeyConstraintWhenMigrating: true,
+	})
 
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 		return nil, err
 	}
 
-	db.AutoMigrate(&models.Category{}, &models.Article{}, &models.User{}, &models.Image{}, &models.Tag{}, &models.Dict{})
+	db.AutoMigrate(&models.Category{}, &models.User{}, &models.Image{}, &models.Tag{}, &models.Article{}, &models.Dict{})
 
 	return db, nil
 }

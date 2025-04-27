@@ -5,6 +5,7 @@ import (
 	"cms/models/domain"
 	"errors"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -23,8 +24,8 @@ type (
 	DictService interface {
 		GetDicts() ([]*models.Dict, error)
 		CreateDict(params domain.CreateDictParams) error
-		UpdateDict(id uint, params domain.UpdateDictParams) error
-		DeleteDict(id uint) error
+		UpdateDict(id uuid.UUID, params domain.UpdateDictParams) error
+		DeleteDict(id uuid.UUID) error
 		GetDictExtraByCode(code string) (string, error)
 		GetSubDictsByCode(code string) ([]*models.Dict, error)
 	}
@@ -66,7 +67,7 @@ func (s *dictService) CreateDict(params domain.CreateDictParams) error {
 	return s.db.Create(&dictModel).Error
 }
 
-func (s *dictService) UpdateDict(id uint, params domain.UpdateDictParams) error {
+func (s *dictService) UpdateDict(id uuid.UUID, params domain.UpdateDictParams) error {
 	dict := new(models.Dict)
 	// 检查字典是否存在
 	if err := s.db.Where("id = ?", id).First(dict).Error; err != nil {
@@ -104,7 +105,7 @@ func (s *dictService) UpdateDict(id uint, params domain.UpdateDictParams) error 
 	return s.db.Save(dict).Error
 }
 
-func (s *dictService) DeleteDict(id uint) error {
+func (s *dictService) DeleteDict(id uuid.UUID) error {
 	dict := new(models.Dict)
 	// 检查字典是否存在
 	if err := s.db.Where("id = ?", id).First(dict).Error; err != nil {

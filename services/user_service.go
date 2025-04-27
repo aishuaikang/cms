@@ -6,6 +6,7 @@ import (
 	"cms/utils"
 	"errors"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -27,12 +28,12 @@ type (
 	UserService interface {
 		GetUsers() ([]*models.User, error)
 		CreateUser(params domain.CreateUserParams) error
-		UpdateUser(id uint, params domain.UpdateUserParams) error
-		DeleteUser(id uint) error
+		UpdateUser(id uuid.UUID, params domain.UpdateUserParams) error
+		DeleteUser(id uuid.UUID) error
 		Login(params domain.LoginParams) (*models.User, error)
 		CreateInitialUser(initialUsername, initialPassword string) error
 		// 根据用户id获取是否是超级管理员
-		GetUserIsSuper(id uint) (bool, error)
+		GetUserIsSuper(id uuid.UUID) (bool, error)
 	}
 	userService struct {
 		db *gorm.DB
@@ -86,7 +87,7 @@ func (s *userService) CreateUser(user domain.CreateUserParams) error {
 	return s.db.Create(&categoryModel).Error
 }
 
-func (s *userService) UpdateUser(id uint, params domain.UpdateUserParams) error {
+func (s *userService) UpdateUser(id uuid.UUID, params domain.UpdateUserParams) error {
 	user := new(models.User)
 	// 检查用户是否存在
 	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
@@ -138,7 +139,7 @@ func (s *userService) UpdateUser(id uint, params domain.UpdateUserParams) error 
 	return s.db.Save(user).Error
 }
 
-func (s *userService) DeleteUser(id uint) error {
+func (s *userService) DeleteUser(id uuid.UUID) error {
 	user := new(models.User)
 	// 检查用户是否存在
 	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {
@@ -189,7 +190,7 @@ func (s *userService) CreateInitialUser(initialUsername, initialPassword string)
 	return s.db.Create(user).Error
 }
 
-func (s *userService) GetUserIsSuper(id uint) (bool, error) {
+func (s *userService) GetUserIsSuper(id uuid.UUID) (bool, error) {
 	user := new(models.User)
 	// 检查用户是否存在
 	if err := s.db.Where("id = ?", id).First(user).Error; err != nil {

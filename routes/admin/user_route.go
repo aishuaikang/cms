@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 var (
@@ -40,8 +41,8 @@ func NewUserRoute(app fiber.Router, userService services.UserService, validator 
 func (r *userRoute) RegisterRoutes() {
 	r.app.Get("/", r.getUsers)
 	r.app.Post("/", r.createUser)
-	r.app.Put("/:id<int>", r.updateUser)
-	r.app.Delete("/:id<int>", r.deleteUser)
+	r.app.Put("/:id<guid>", r.updateUser)
+	r.app.Delete("/:id<guid>", r.deleteUser)
 }
 
 func (r *userRoute) getUsers(c *fiber.Ctx) error {
@@ -73,12 +74,12 @@ func (r *userRoute) createUser(c *fiber.Ctx) error {
 
 // 删除用户
 func (ur *userRoute) deleteUser(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
 
-	if err := ur.userService.DeleteUser(uint(id)); err != nil {
+	if err := ur.userService.DeleteUser(id); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除用户失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除用户成功")
@@ -86,10 +87,11 @@ func (ur *userRoute) deleteUser(c *fiber.Ctx) error {
 
 // 更新用户
 func (ur *userRoute) updateUser(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
+
 	params := new(domain.UpdateUserParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -99,7 +101,7 @@ func (ur *userRoute) updateUser(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := ur.userService.UpdateUser(uint(id), *params); err != nil {
+	if err := ur.userService.UpdateUser(id, *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新用户失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "更新用户成功")

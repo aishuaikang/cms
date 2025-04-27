@@ -1,11 +1,23 @@
 package models
 
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type Category struct {
-	ID          uint   `json:"id,string" gorm:"primarykey"`
-	Name        string `json:"name" gorm:"not null;unique"`
-	Description string `json:"description"`
+	ID          uuid.UUID `json:"id" gorm:"primary_key;type:char(36)"`
+	Name        string    `json:"name" gorm:"not null;unique"`
+	Description string    `json:"description"`
 
 	Articles []Article `json:"articles"`
 
 	CommonModel
+}
+
+func (c *Category) BeforeCreate(tx *gorm.DB) (err error) {
+	if c.ID == uuid.Nil {
+		c.ID = uuid.New()
+	}
+	return
 }

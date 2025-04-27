@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type (
@@ -35,8 +36,8 @@ func NewCategoryRoute(app fiber.Router, categoryService services.CategoryService
 func (r *categoryRoute) RegisterRoutes() {
 	r.app.Get("/", r.getCategorys)
 	r.app.Post("/", r.createCategory)
-	r.app.Put("/:id<int>", r.updateCategory)
-	r.app.Delete("/:id<int>", r.deleteCategory)
+	r.app.Put("/:id<guid>", r.updateCategory)
+	r.app.Delete("/:id<guid>", r.deleteCategory)
 }
 
 // 获取分类列表
@@ -67,10 +68,11 @@ func (r *categoryRoute) createCategory(c *fiber.Ctx) error {
 
 // 更新分类
 func (r *categoryRoute) updateCategory(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
+
 	params := new(domain.UpdateCategoryParams)
 	if err := c.BodyParser(params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
@@ -80,7 +82,7 @@ func (r *categoryRoute) updateCategory(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
 	}
 
-	if err := r.categoryService.UpdateCategory(uint(id), *params); err != nil {
+	if err := r.categoryService.UpdateCategory(id, *params); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新分类失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "更新分类成功")
@@ -88,11 +90,11 @@ func (r *categoryRoute) updateCategory(c *fiber.Ctx) error {
 
 // 删除分类
 func (r *categoryRoute) deleteCategory(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数错误", err)
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
 	}
-	if err := r.categoryService.DeleteCategory(uint(id)); err != nil {
+	if err := r.categoryService.DeleteCategory(id); err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除分类失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除分类成功")

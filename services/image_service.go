@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -28,8 +29,8 @@ type (
 		GetImages() ([]*models.Image, error)
 		CreateImage(image domain.CreateImageParams) (*models.Image, error)
 		GetImageByHash(hash uint64) (*models.Image, error)
-		GetImageById(id uint) (*models.Image, error)
-		DeleteImage(id uint, uploadPath string) error
+		GetImageById(id uuid.UUID) (*models.Image, error)
+		DeleteImage(id uuid.UUID, uploadPath string) error
 	}
 	imageService struct {
 		db *gorm.DB
@@ -69,7 +70,7 @@ func (s *imageService) GetImageByHash(hash uint64) (*models.Image, error) {
 	return &image, nil
 }
 
-func (s *imageService) GetImageById(id uint) (*models.Image, error) {
+func (s *imageService) GetImageById(id uuid.UUID) (*models.Image, error) {
 	var image models.Image
 	if err := s.db.Where("id = ?", id).First(&image).Error; err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func (s *imageService) GetImageById(id uint) (*models.Image, error) {
 	return &image, nil
 }
 
-func (s *imageService) DeleteImage(id uint, uploadPath string) error {
+func (s *imageService) DeleteImage(id uuid.UUID, uploadPath string) error {
 	image := new(models.Image)
 
 	// 检查图片是否存在
