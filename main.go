@@ -9,6 +9,7 @@ import (
 	"cms/routes/common"
 	"cms/services"
 	"cms/utils"
+	"os"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -145,5 +146,10 @@ func main() {
 		common.NewAccountRoute(commonGroup.Group("account"), userService, validate, privateKey).RegisterRoutes()
 	}
 
-	app.Listen(":3000")
+	// 从环境变量中读取端口号，默认为 ":3000"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000" // 默认端口
+	}
+	app.Listen(":" + port)
 }
