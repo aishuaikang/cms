@@ -9,7 +9,7 @@ type (
 		Code        string     `json:"code" validate:"required"`
 		Extra       string     `json:"extra"`
 		Description string     `json:"description"`
-		ParentID    *uuid.UUID `json:"parent_id"`
+		ParentID    *uuid.UUID `json:"parentId"`
 	}
 	// 修改字典参数
 	UpdateDictParams struct {

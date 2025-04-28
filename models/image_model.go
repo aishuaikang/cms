@@ -8,13 +8,13 @@ import (
 type Image struct {
 	ID    uuid.UUID `json:"id" gorm:"primary_key;type:char(36)"`
 	Title string    `json:"title"`
-	Hash  uint64    `json:"hash" gorm:"uniqueIndex;not null"`
+	Hash  uint64    `json:"hash,string" gorm:"uniqueIndex;not null"`
 
 	Articles []*Article `json:"articles" gorm:"many2many:article_images"`
 
 	Users []*User `json:"users"`
 
-	CommonModel
+	CommonNotDeletedModel
 }
 
 func (i *Image) BeforeCreate(tx *gorm.DB) (err error) {

@@ -43,7 +43,7 @@ func NewImageService(db *gorm.DB) ImageService {
 
 func (s *imageService) GetImages() ([]*models.Image, error) {
 	var images []*models.Image
-	if err := s.db.Find(&images).Error; err != nil {
+	if err := s.db.Preload(clause.Associations).Find(&images).Error; err != nil {
 		return nil, err
 	}
 	return images, nil
@@ -97,7 +97,7 @@ func (s *imageService) DeleteImage(id uuid.UUID, uploadPath string) error {
 	}
 
 	// 删除本地文件
-	if err := os.Remove(path.Join(uploadPath, fmt.Sprintf("%v", id))); err != nil {
+	if err := os.Remove(path.Join(uploadPath, fmt.Sprintf("%v", image.Hash))); err != nil {
 		return err
 	}
 

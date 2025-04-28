@@ -11,7 +11,7 @@ type Dict struct {
 	Code        string     `json:"code" gorm:"not null;unique"`
 	Extra       string     `json:"extra"`
 	Description string     `json:"description"`
-	ParentID    *uuid.UUID `json:"parent_id"`
+	ParentID    *uuid.UUID `json:"parentId"`
 
 	CommonModel
 }

@@ -19,13 +19,13 @@ type Article struct {
 	Content     string        `json:"content"`
 	Status      ArticleStatus `json:"status"`
 
-	CategoryID uuid.UUID `json:"category_id"`
+	CategoryID uuid.UUID `json:"categoryId"`
 
 	Images []*Image `json:"images" gorm:"many2many:article_images"`
 
 	Tags []*Tag `json:"tags" gorm:"many2many:article_tags"`
 
-	UserID uuid.UUID `json:"user_id"`
+	UserID uuid.UUID `json:"userId"`
 
 	CommonModel
 }

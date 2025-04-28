@@ -11,9 +11,9 @@ type User struct {
 	Phone    string    `json:"phone" gorm:"uniqueIndex;not null"`
 	Username string    `json:"username" gorm:"uniqueIndex;not null"`
 	Password string    `json:"-" gorm:"not null"`
-	IsSuper  bool      `json:"is_super" gorm:"not null"`
+	IsSuper  bool      `json:"isSuper" gorm:"not null"`
 
-	ImageID *uuid.UUID `json:"image_id"`
+	ImageID *uuid.UUID `json:"imageId"`
 
 	Articles []*Article `json:"articles"`
 

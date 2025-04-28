@@ -49,7 +49,16 @@ func (r *articleRoute) RegisterRoutes() {
 
 // 获取文章列表
 func (r *articleRoute) getArticles(c *fiber.Ctx) error {
-	res, err := r.articleService.GetArticles()
+	params := new(domain.GetArticleListParams)
+	if err := c.QueryParser(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析查询参数失败", err)
+	}
+
+	if err := r.validator.Struct(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+	}
+
+	res, err := r.articleService.GetArticles(*params)
 	if err != nil {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取文章列表失败", err)
 	}

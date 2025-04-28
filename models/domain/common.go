@@ -11,6 +11,12 @@ type Response struct {
 	Data    any    `json:"data"`
 }
 
+type LimitResponse[T any] struct {
+	Rows  []T   `json:"rows"`
+	Total int64 `json:"total"`
+	Pages int   `json:"pages"`
+}
+
 func SuccessResponse(ctx *fiber.Ctx, data any, message string) error {
 	resp := Response{
 		Code:    200,

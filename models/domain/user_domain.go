@@ -25,7 +25,7 @@ type (
 		Phone    string     `json:"phone" validate:"required"`
 		Username string     `json:"username" validate:"required"`
 		Password string     `json:"password" validate:"required"`
-		ImageID  *uuid.UUID `json:"image_id"`
+		ImageID  *uuid.UUID `json:"imageId"`
 	}
 
 	// 更新用户参数
@@ -34,6 +34,6 @@ type (
 		Phone    *string    `json:"phone"`
 		Username *string    `json:"username"`
 		Password *string    `json:"password"`
-		ImageID  *uuid.UUID `json:"image_id"`
+		ImageID  *uuid.UUID `json:"imageId"`
 	}
 )

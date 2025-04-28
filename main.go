@@ -4,6 +4,7 @@ import (
 	"cms/config"
 	"cms/middleware/roleauth"
 	"cms/models/domain"
+	"cms/models/scopes"
 	"cms/routes/admin"
 	"cms/routes/common"
 	"cms/services"
@@ -123,7 +124,7 @@ func main() {
 		// 分类
 		admin.NewCategoryRoute(adminGroup.Group("category", roleAuthMiddleware), services.NewCategoryService(db), validate).RegisterRoutes()
 		// 文章
-		admin.NewArticleRoute(adminGroup.Group("article"), services.NewArticleService(db), validate).RegisterRoutes()
+		admin.NewArticleRoute(adminGroup.Group("article"), services.NewArticleService(db, scopes.NewArticleScope(db)), validate).RegisterRoutes()
 		// 图片
 		admin.NewImageRoute(adminGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 用户

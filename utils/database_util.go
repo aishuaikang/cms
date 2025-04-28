@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDB() (*gorm.DB, error) {
@@ -36,6 +37,7 @@ func InitDB() (*gorm.DB, error) {
 		SkipInitializeWithVersion: false,              // smart configure based on used version
 	}), &gorm.Config{
 		// DisableForeignKeyConstraintWhenMigrating: true,
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 
 	if err != nil {

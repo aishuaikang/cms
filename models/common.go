@@ -10,9 +10,14 @@ import (
 )
 
 type CommonModel struct {
-	CreatedAt CustomTime     `json:"created_at"`
-	UpdatedAt CustomTime     `json:"updated_at"`
+	CreatedAt CustomTime     `json:"createdAt"`
+	UpdatedAt CustomTime     `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+type CommonNotDeletedModel struct {
+	CreatedAt CustomTime `json:"createdAt"`
+	UpdatedAt CustomTime `json:"updatedAt"`
 }
 
 type CustomTime time.Time
