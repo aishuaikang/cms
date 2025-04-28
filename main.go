@@ -44,7 +44,7 @@ func main() {
 	validate := validator.New()
 
 	app := fiber.New(fiber.Config{
-		Prefork:       true,
+		// Prefork:       true,
 		CaseSensitive: true,
 		// StrictRouting: true,
 		ServerHeader: "cms",
@@ -111,12 +111,13 @@ func main() {
 	}
 
 	roleAuthMiddleware := roleauth.New(userService)
-
 	{
 		// 对于所有admin路由，使用jwt中间件进行验证
 		// 这里的jwt中间件会在请求到达路由之前进行验证
 		adminGroup := api.Group("admin", jwtware.New(jwtware.Config{
-			SigningKey: jwtware.SigningKey{Key: privateKey.Public()},
+			SigningKey: jwtware.SigningKey{
+				JWTAlg: jwtware.RS512,
+				Key:    privateKey.Public()},
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
 				return domain.ErrorResponse(c, fiber.StatusUnauthorized, "您的身份验证已过期，请重新登录", err)
 			},
