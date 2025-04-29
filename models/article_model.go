@@ -16,7 +16,7 @@ type Article struct {
 	ID          uuid.UUID     `json:"id" gorm:"primary_key;type:char(36)"`
 	Title       string        `json:"title" gorm:"not null;unique"`
 	Description string        `json:"description"`
-	Content     string        `json:"content"`
+	Content     string        `json:"content" gorm:"type:mediumtext"`
 	Status      ArticleStatus `json:"status"`
 
 	CategoryID uuid.UUID `json:"categoryId"`
