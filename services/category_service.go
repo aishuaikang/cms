@@ -15,6 +15,8 @@ var (
 	ErrCategoryNotFound = errors.New("分类不存在")
 	// ErrCategoryNameAlreadyExists 分类名称已存在
 	ErrCategoryNameAlreadyExists = errors.New("分类名称已存在")
+	// ErrCategoryAliasAlreadyExists 分类别名已存在
+	ErrCategoryAliasAlreadyExists = errors.New("分类别名已存在")
 	// ErrCategoryHasArticles 分类下存在文章
 	ErrCategoryHasArticles = errors.New("分类下存在文章")
 )
@@ -25,6 +27,9 @@ type (
 		CreateCategory(params domain.CreateCategoryParams) error
 		UpdateCategory(id uuid.UUID, params domain.UpdateCategoryParams) error
 		DeleteCategory(id uuid.UUID) error
+		GetCategorysWithCache() ([]*models.Category, error)
+		GetCategoryByAliasWithCache(alias string) (*models.Category, error)
+		GetCategoryByIDWithCache(articleID uuid.UUID) (*models.Category, error)
 	}
 	categoryService struct {
 		db *gorm.DB
@@ -49,8 +54,14 @@ func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) err
 		return ErrCategoryNameAlreadyExists
 	}
 
+	// 检查分类别名是否已存在
+	if err := s.db.Where("alias = ?", params.Alias).First(&models.Category{}).Error; err == nil {
+		return ErrCategoryAliasAlreadyExists
+	}
+
 	categoryModel := &models.Category{
 		Name:        params.Name,
+		Alias:       params.Alias,
 		Description: params.Description,
 	}
 
@@ -73,6 +84,14 @@ func (s *categoryService) UpdateCategory(id uuid.UUID, params domain.UpdateCateg
 		category.Name = *params.Name
 	}
 
+	if params.Alias != nil && category.Alias != *params.Alias {
+		// 检查分类别名是否已存在
+		if err := s.db.Where("alias = ?", *params.Alias).First(&models.Category{}).Error; err == nil {
+			return ErrCategoryAliasAlreadyExists
+		}
+		category.Alias = *params.Alias
+	}
+
 	if params.Description != nil && category.Description != *params.Description {
 		category.Description = *params.Description
 	}
@@ -92,4 +111,28 @@ func (s *categoryService) DeleteCategory(id uuid.UUID) error {
 	}
 
 	return s.db.Delete(category).Error
+}
+
+func (s *categoryService) GetCategorysWithCache() ([]*models.Category, error) {
+	var categories []*models.Category
+	if err := s.db.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+	return categories, nil
+}
+
+func (s *categoryService) GetCategoryByAliasWithCache(alias string) (*models.Category, error) {
+	var category models.Category
+	if err := s.db.Where("alias = ?", alias).First(&category).Error; err != nil {
+		return nil, err
+	}
+	return &category, nil
+}
+
+func (s *categoryService) GetCategoryByIDWithCache(articleID uuid.UUID) (*models.Category, error) {
+	var category models.Category
+	if err := s.db.Where("id = ?", articleID).First(&category).Error; err != nil {
+		return nil, err
+	}
+	return &category, nil
 }

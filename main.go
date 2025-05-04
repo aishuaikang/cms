@@ -71,27 +71,6 @@ func main() {
 	// 例如，设置X-Content-Type-Options、X-Frame-Options等
 	app.Use(helmet.New())
 
-	// 设置限制器中间件
-	// 限制器中间件可以帮助你限制请求的频率
-	// 例如，限制每个IP每分钟只能请求100次
-	// 这里使用了滑动窗口算法
-	app.Use(limiter.New(limiter.Config{
-		Max:        100,             // 每个IP的最大请求数
-		Expiration: 1 * time.Minute, // 时间窗口为1分钟
-		// KeyGenerator: func(c *fiber.Ctx) string {
-		// 	return c.IP() // 使用IP地址作为限流的唯一标识
-		// },
-		LimiterMiddleware: limiter.SlidingWindow{}, // 使用滑动窗口算法
-		LimitReached: func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusTooManyRequests).JSON(domain.Response{
-				Code:    fiber.StatusTooManyRequests,
-				Message: "请求过于频繁，请稍后再试",
-				Data:    nil,
-				Error:   nil,
-			})
-		},
-	}))
-
 	// 设置日志中间件
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
@@ -140,11 +119,36 @@ func main() {
 	}
 
 	{
-		commonGroup := api.Group("common")
+		// 设置限制器中间件
+		// 限制器中间件可以帮助你限制请求的频率
+		// 例如，限制每个IP每分钟只能请求100次
+		// 这里使用了滑动窗口算法
+
+		commonGroup := api.Group("common", limiter.New(limiter.Config{
+			Max:        100,             // 每个IP的最大请求数
+			Expiration: 1 * time.Minute, // 时间窗口为1分钟
+			// KeyGenerator: func(c *fiber.Ctx) string {
+			// 	return c.IP() // 使用IP地址作为限流的唯一标识
+			// },
+			LimiterMiddleware: limiter.SlidingWindow{}, // 使用滑动窗口算法
+			LimitReached: func(c *fiber.Ctx) error {
+				return c.Status(fiber.StatusTooManyRequests).JSON(domain.Response{
+					Code:    fiber.StatusTooManyRequests,
+					Message: "请求过于频繁，请稍后再试",
+					Data:    nil,
+					Error:   nil,
+				})
+			},
+		}))
+
 		// 图片
 		common.NewImageRoute(commonGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
 		// 账号
 		common.NewAccountRoute(commonGroup.Group("account"), userService, validate, privateKey).RegisterRoutes()
+		// 分类
+		common.NewCategoryRoute(commonGroup.Group("category"), services.NewCategoryService(db), validate).RegisterRoutes()
+		// 新闻
+		common.NewArticleRoute(commonGroup.Group("article"), services.NewArticleService(db, scopes.NewArticleScope(db)), validate).RegisterRoutes()
 	}
 
 	// 从环境变量中读取端口号，默认为 ":3000"

@@ -25,6 +25,9 @@ type (
 		CreateArticle(user_id uuid.UUID, article domain.CreateArticleParams) error
 		UpdateArticle(id uuid.UUID, article domain.UpdateArticleParams) error
 		DeleteArticle(id uuid.UUID) error
+		GetArticlesByCategoryAliasWithCache(alias string, params domain.GetArticlesByCategoryAliasWithCacheParams) (*domain.LimitResponse[*models.Article], error)
+		GetArticleByIDWithCache(id uuid.UUID) (*models.Article, error)
+		GetRelatedArticlesByIDWithCache(id uuid.UUID, params domain.GetRelatedArticlesByIDWithCacheParams) (*domain.LimitResponse[*models.Article], error)
 	}
 	articleService struct {
 		db           *gorm.DB
@@ -196,4 +199,80 @@ func (s *articleService) DeleteArticle(id uuid.UUID) error {
 	}
 
 	return s.db.Delete(article).Error
+}
+
+// GetArticlesByCategoryAliasWithCache 根据分类别名获取文章列表，带缓存
+func (s *articleService) GetArticlesByCategoryAliasWithCache(alias string, params domain.GetArticlesByCategoryAliasWithCacheParams) (*domain.LimitResponse[*models.Article], error) {
+	var count int64
+	var articles []*models.Article
+
+	// 基础查询
+	model := s.db.Model(&models.Article{}).Where("category_id = (SELECT id FROM categories WHERE alias = ?)", alias)
+	// 统计总数
+	if err := model.Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	// 分页查询
+	if err := model.Scopes(
+		scopes.PaginationScope(params.Page, params.PageSize),
+	).Preload(clause.Associations).Find(&articles).Error; err != nil {
+		return nil, err
+	}
+
+	// 计算总页数
+	totalPages := int(math.Ceil(float64(count) / float64(params.PageSize)))
+
+	return &domain.LimitResponse[*models.Article]{
+		Total: count,
+		Rows:  articles,
+		Pages: totalPages,
+	}, nil
+}
+
+func (s *articleService) GetArticleByIDWithCache(id uuid.UUID) (*models.Article, error) {
+	article := new(models.Article)
+	// 检查文章是否存在
+	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(article).Error; err != nil {
+		return nil, ErrArticleNotFound
+	}
+
+	return article, nil
+}
+
+func (s *articleService) GetRelatedArticlesByIDWithCache(id uuid.UUID, params domain.GetRelatedArticlesByIDWithCacheParams) (*domain.LimitResponse[*models.Article], error) {
+	article := new(models.Article)
+	// 检查文章是否存在
+	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(article).Error; err != nil {
+		return nil, ErrArticleNotFound
+	}
+
+	var count int64
+	var relatedArticles []*models.Article
+
+	// 基础查询
+	model := s.db.Model(&models.Article{}).
+		Where("category_id = ? AND id != ?", article.CategoryID, id).
+		Or("id IN (SELECT article_id FROM article_tags WHERE tag_id IN (SELECT tag_id FROM article_tags WHERE article_id = ?)) AND id != ?", id, id)
+
+	// 统计总数
+	if err := model.Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	// 分页查询
+	if err := model.Scopes(
+		scopes.PaginationScope(params.Page, params.PageSize),
+	).Preload(clause.Associations).Find(&relatedArticles).Error; err != nil {
+		return nil, err
+	}
+
+	// 计算总页数
+	totalPages := int(math.Ceil(float64(count) / float64(params.PageSize)))
+
+	return &domain.LimitResponse[*models.Article]{
+		Total: count,
+		Rows:  relatedArticles,
+		Pages: totalPages,
+	}, nil
 }

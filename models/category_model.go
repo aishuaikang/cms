@@ -8,6 +8,7 @@ import (
 type Category struct {
 	ID          uuid.UUID `json:"id" gorm:"primary_key;type:char(36)"`
 	Name        string    `json:"name" gorm:"not null;unique"`
+	Alias       string    `json:"alias" gorm:"not null;unique"`
 	Description string    `json:"description"`
 
 	Articles []Article `json:"articles"`

@@ -36,4 +36,16 @@ type (
 		ImageIds    []uuid.UUID           `json:"imageIds"`
 		TagIds      []uuid.UUID           `json:"tagIds"`
 	}
+
+	// 获取文章列表返回值
+	GetArticlesByCategoryAliasWithCacheParams struct {
+		Page     int `json:"page" validate:"required,min=1"`
+		PageSize int `json:"pageSize" validate:"required,min=1,max=100"`
+	}
+
+	// GetRelatedArticlesByIDWithCacheParams 获取相关文章参数
+	GetRelatedArticlesByIDWithCacheParams struct {
+		Page     int `json:"page" validate:"required,min=1"`
+		PageSize int `json:"pageSize" validate:"required,min=1,max=100"`
+	}
 )

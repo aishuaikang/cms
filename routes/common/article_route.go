@@ -1,0 +1,178 @@
+package common
+
+import (
+	"cms/models/domain"
+	"cms/services"
+	"errors"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+)
+
+var (
+	// 获取用户ID失败
+	ErrGetUserIDFailed = errors.New("获取用户ID失败")
+)
+
+type (
+	ArticleRoute interface {
+		RegisterRoutes()
+		getArticlesByCategoryAlias(c *fiber.Ctx) error
+		getArticleByID(c *fiber.Ctx) error
+		getRelatedArticlesByID(c *fiber.Ctx) error
+	}
+	articleRoute struct {
+		app            fiber.Router
+		articleService services.ArticleService
+		validator      *validator.Validate
+	}
+)
+
+func NewArticleRoute(app fiber.Router, articleService services.ArticleService, validator *validator.Validate) ArticleRoute {
+	return &articleRoute{
+		app,
+		articleService,
+		validator,
+	}
+}
+
+// 注册
+func (r *articleRoute) RegisterRoutes() {
+	r.app.Get("/getArticlesByCategoryAlias/:alias", r.getArticlesByCategoryAlias)
+	r.app.Get("/getArticleByID/:id", r.getArticleByID)
+	r.app.Get("/getRelatedArticlesByID/:id", r.getRelatedArticlesByID)
+}
+
+func (r *articleRoute) getArticlesByCategoryAlias(c *fiber.Ctx) error {
+	alias := c.Params("alias")
+	params := new(domain.GetArticlesByCategoryAliasWithCacheParams)
+	if err := c.QueryParser(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析查询参数失败", err)
+	}
+
+	if err := r.validator.Struct(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+	}
+
+	res, err := r.articleService.GetArticlesByCategoryAliasWithCache(alias, *params)
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取文章列表失败", err)
+	}
+	return domain.SuccessResponse(c, res, "获取文章列表成功")
+}
+
+// 根据ID获取文章
+func (r *articleRoute) getArticleByID(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
+	}
+
+	article, err := r.articleService.GetArticleByIDWithCache(id)
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取文章失败", err)
+	}
+	return domain.SuccessResponse(c, article, "获取文章成功")
+}
+
+// 根据ID获取相关文章
+func (r *articleRoute) getRelatedArticlesByID(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
+	}
+
+	params := new(domain.GetRelatedArticlesByIDWithCacheParams)
+	if err := c.QueryParser(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析查询参数失败", err)
+	}
+
+	if err := r.validator.Struct(params); err != nil {
+		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+	}
+
+	articles, err := r.articleService.GetRelatedArticlesByIDWithCache(id, *params)
+	if err != nil {
+		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取相关文章失败", err)
+	}
+	return domain.SuccessResponse(c, articles, "获取相关文章成功")
+}
+
+// // 获取文章列表
+// func (r *articleRoute) getArticles(c *fiber.Ctx) error {
+// 	params := new(domain.GetArticleListParams)
+// 	if err := c.QueryParser(params); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析查询参数失败", err)
+// 	}
+
+// 	if err := r.validator.Struct(params); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+// 	}
+
+// 	res, err := r.articleService.GetArticles(*params)
+// 	if err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取文章列表失败", err)
+// 	}
+// 	return domain.SuccessResponse(c, res, "获取文章列表成功")
+// }
+
+// // 创建文章
+// func (r *articleRoute) createArticle(c *fiber.Ctx) error {
+// 	params := new(domain.CreateArticleParams)
+// 	if err := c.BodyParser(params); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
+// 	}
+
+// 	if err := r.validator.Struct(params); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+// 	}
+
+// 	user := c.Locals("user").(*jwt.Token)
+// 	claims := user.Claims.(jwt.MapClaims)
+// 	userID, err := uuid.Parse(claims["user_id"].(string))
+// 	if err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "获取用户ID失败", ErrGetUserIDFailed)
+// 	}
+
+// 	if err := r.articleService.CreateArticle(userID, *params); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "创建文章失败", err)
+// 	}
+// 	return domain.SuccessResponse(c, nil, "创建文章成功")
+// }
+
+// // 更新文章
+// func (r *articleRoute) updateArticle(c *fiber.Ctx) error {
+// 	id, err := uuid.Parse(c.Params("id"))
+// 	if err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
+// 	}
+
+// 	body := new(domain.UpdateArticleParams)
+// 	if err := c.BodyParser(body); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析请求体失败", err)
+// 	}
+
+// 	if err := r.validator.Struct(body); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "参数校验失败", err)
+// 	}
+
+// 	if err := r.articleService.UpdateArticle(id, *body); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "更新文章失败", err)
+// 	}
+
+// 	return domain.SuccessResponse(c, nil, "更新文章成功")
+// }
+
+// // 删除文章
+// func (r *articleRoute) deleteArticle(c *fiber.Ctx) error {
+// 	id, err := uuid.Parse(c.Params("id"))
+// 	if err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusBadRequest, "解析ID失败", err)
+// 	}
+
+// 	if err := r.articleService.DeleteArticle(id); err != nil {
+// 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除文章失败", err)
+// 	}
+// 	return domain.SuccessResponse(c, nil, "删除文章成功")
+// }
