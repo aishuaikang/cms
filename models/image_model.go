@@ -14,6 +14,8 @@ type Image struct {
 
 	Users []*User `json:"users"`
 
+	Dicts []*Dict `json:"dicts"`
+
 	CommonNotDeletedModel
 }
 

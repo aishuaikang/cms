@@ -52,36 +52,36 @@ func (s *userService) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func (s *userService) CreateUser(user domain.CreateUserParams) error {
+func (s *userService) CreateUser(params domain.CreateUserParams) error {
 	// 检查用户名是否存在
-	if err := s.db.Where("username = ?", user.Username).First(&models.User{}).Error; err == nil {
+	if err := s.db.Where("username = ?", params.Username).First(&models.User{}).Error; err == nil {
 		return ErrUsernameExists
 	}
 
 	// 检查手机号是否存在
-	if err := s.db.Where("phone = ?", user.Phone).First(&models.User{}).Error; err == nil {
+	if err := s.db.Where("phone = ?", params.Phone).First(&models.User{}).Error; err == nil {
 		return ErrPhoneExists
 	}
 
 	// 对密码进行加密
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	categoryModel := &models.User{
-		Nickname: user.Nickname,
-		Phone:    user.Phone,
-		Username: user.Username,
+		Nickname: params.Nickname,
+		Phone:    params.Phone,
+		Username: params.Username,
 		Password: string(hashedPassword),
 	}
 
-	if user.ImageID != nil {
+	if params.ImageID != nil {
 		// 检查图片是否存在
-		if err := s.db.Where("id = ?", *user.ImageID).First(&models.Image{}).Error; err != nil {
+		if err := s.db.Where("id = ?", *params.ImageID).First(&models.Image{}).Error; err != nil {
 			return ErrImageNotFound
 		}
-		categoryModel.ImageID = user.ImageID
+		categoryModel.ImageID = params.ImageID
 	}
 
 	return s.db.Create(&categoryModel).Error

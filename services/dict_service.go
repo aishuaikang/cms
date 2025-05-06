@@ -26,8 +26,9 @@ type (
 		CreateDict(params domain.CreateDictParams) error
 		UpdateDict(id uuid.UUID, params domain.UpdateDictParams) error
 		DeleteDict(id uuid.UUID) error
-		GetDictExtraByCode(code string) (string, error)
-		GetSubDictsByCode(code string) ([]*models.Dict, error)
+		GetDictExtraByCodeWithCache(code string) (string, error)
+		GetSubDictsByCodeWithCache(code string) ([]*models.Dict, error)
+		GetDictByCodeWithCache(code string) (*models.Dict, error)
 	}
 	dictService struct {
 		db *gorm.DB
@@ -64,6 +65,14 @@ func (s *dictService) CreateDict(params domain.CreateDictParams) error {
 		ParentID:    params.ParentID,
 	}
 
+	if params.ImageID != nil {
+		// 检查图片是否存在
+		if err := s.db.Where("id = ?", *params.ImageID).First(&models.Image{}).Error; err != nil {
+			return ErrImageNotFound
+		}
+		dictModel.ImageID = params.ImageID
+	}
+
 	return s.db.Create(&dictModel).Error
 }
 
@@ -94,6 +103,14 @@ func (s *dictService) UpdateDict(id uuid.UUID, params domain.UpdateDictParams) e
 		dict.Extra = *params.Extra
 	}
 
+	if params.ImageID != nil && dict.ImageID != params.ImageID {
+		// 检查图片是否存在
+		if err := s.db.Where("id = ?", *params.ImageID).First(&models.Image{}).Error; err != nil {
+			return ErrImageNotFound
+		}
+		dict.ImageID = params.ImageID
+	}
+
 	if params.Description != nil && dict.Description != *params.Description {
 		dict.Description = *params.Description
 	}
@@ -120,7 +137,7 @@ func (s *dictService) DeleteDict(id uuid.UUID) error {
 	return s.db.Delete(dict).Error
 }
 
-func (s *dictService) GetDictExtraByCode(code string) (string, error) {
+func (s *dictService) GetDictExtraByCodeWithCache(code string) (string, error) {
 	dict := new(models.Dict)
 	if err := s.db.Where("code = ?", code).First(dict).Error; err != nil {
 		return "", err
@@ -128,7 +145,15 @@ func (s *dictService) GetDictExtraByCode(code string) (string, error) {
 	return dict.Extra, nil
 }
 
-func (s *dictService) GetSubDictsByCode(code string) ([]*models.Dict, error) {
+func (s *dictService) GetDictByCodeWithCache(code string) (*models.Dict, error) {
+	dict := new(models.Dict)
+	if err := s.db.Where("code = ?", code).First(dict).Error; err != nil {
+		return nil, err
+	}
+	return dict, nil
+}
+
+func (s *dictService) GetSubDictsByCodeWithCache(code string) ([]*models.Dict, error) {
 	dict := new(models.Dict)
 	// 检查字典是否存在
 	if err := s.db.Where("code = ?", code).First(dict).Error; err != nil {

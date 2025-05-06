@@ -10,13 +10,16 @@ type (
 		Extra       string     `json:"extra"`
 		Description string     `json:"description"`
 		ParentID    *uuid.UUID `json:"parentId"`
+		ImageID     *uuid.UUID `json:"imageId"`
 	}
 	// 修改字典参数
 	UpdateDictParams struct {
-		Name        *string `json:"name"`
-		Code        *string `json:"code"`
-		Extra       *string `json:"extra"`
-		Description *string `json:"description"`
+		Name        *string    `json:"name"`
+		Code        *string    `json:"code"`
+		Extra       *string    `json:"extra"`
+		Description *string    `json:"description"`
+		ImageID     *uuid.UUID `json:"imageId"`
+
 		// ParentID    *uint   `json:"parent_id"`
 	}
 )

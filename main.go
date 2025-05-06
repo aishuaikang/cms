@@ -90,6 +90,12 @@ func main() {
 	}
 
 	roleAuthMiddleware := roleauth.New(userService)
+
+	categoryService := services.NewCategoryService(db)
+	articleService := services.NewArticleService(db, scopes.NewArticleScope(db))
+	imageService := services.NewImageService(db)
+	dictService := services.NewDictService(db)
+
 	{
 		// 对于所有admin路由，使用jwt中间件进行验证
 		// 这里的jwt中间件会在请求到达路由之前进行验证
@@ -103,17 +109,17 @@ func main() {
 		}))
 
 		// 分类
-		admin.NewCategoryRoute(adminGroup.Group("category", roleAuthMiddleware), services.NewCategoryService(db), validate).RegisterRoutes()
+		admin.NewCategoryRoute(adminGroup.Group("category", roleAuthMiddleware), categoryService, validate).RegisterRoutes()
 		// 文章
-		admin.NewArticleRoute(adminGroup.Group("article"), services.NewArticleService(db, scopes.NewArticleScope(db)), validate).RegisterRoutes()
+		admin.NewArticleRoute(adminGroup.Group("article"), articleService, validate).RegisterRoutes()
 		// 图片
-		admin.NewImageRoute(adminGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
+		admin.NewImageRoute(adminGroup.Group("image"), imageService, validate).RegisterRoutes()
 		// 用户
 		admin.NewUserRoute(adminGroup.Group("user", roleAuthMiddleware), userService, validate).RegisterRoutes()
 		// 标签
 		admin.NewTagRoute(adminGroup.Group("tag"), services.NewTagService(db), validate).RegisterRoutes()
 		// 字典
-		admin.NewDictRoute(adminGroup.Group("dict", roleAuthMiddleware), services.NewDictService(db), validate).RegisterRoutes()
+		admin.NewDictRoute(adminGroup.Group("dict", roleAuthMiddleware), dictService, validate).RegisterRoutes()
 		// 账号
 		admin.NewAccountRoute(adminGroup.Group("account"), userService, validate).RegisterRoutes()
 	}
@@ -142,13 +148,15 @@ func main() {
 		}))
 
 		// 图片
-		common.NewImageRoute(commonGroup.Group("image"), services.NewImageService(db), validate).RegisterRoutes()
+		common.NewImageRoute(commonGroup.Group("image"), imageService, validate).RegisterRoutes()
 		// 账号
 		common.NewAccountRoute(commonGroup.Group("account"), userService, validate, privateKey).RegisterRoutes()
 		// 分类
-		common.NewCategoryRoute(commonGroup.Group("category"), services.NewCategoryService(db), validate).RegisterRoutes()
+		common.NewCategoryRoute(commonGroup.Group("category"), categoryService, validate).RegisterRoutes()
 		// 新闻
-		common.NewArticleRoute(commonGroup.Group("article"), services.NewArticleService(db, scopes.NewArticleScope(db)), validate).RegisterRoutes()
+		common.NewArticleRoute(commonGroup.Group("article"), articleService, validate).RegisterRoutes()
+		// 字典
+		common.NewDictRoute(commonGroup.Group("dict"), dictService, validate).RegisterRoutes()
 	}
 
 	// 从环境变量中读取端口号，默认为 ":3000"

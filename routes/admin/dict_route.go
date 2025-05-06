@@ -16,8 +16,6 @@ type (
 		createDict(c *fiber.Ctx) error
 		updateDict(c *fiber.Ctx) error
 		deleteDict(c *fiber.Ctx) error
-		getDictExtraByCode(c *fiber.Ctx) error
-		getSubDictsByCode(c *fiber.Ctx) error
 	}
 	dictRoute struct {
 		app         fiber.Router
@@ -40,8 +38,6 @@ func (r *dictRoute) RegisterRoutes() {
 	r.app.Post("/", r.createDict)
 	r.app.Put("/:id<guid>", r.updateDict)
 	r.app.Delete("/:id<guid>", r.deleteDict)
-	r.app.Get("/getDictExtraByCode/:code", r.getDictExtraByCode)
-	r.app.Get("/getSubDictsByCode/:code", r.getSubDictsByCode)
 }
 
 // 获取字典列表
@@ -103,24 +99,4 @@ func (r *dictRoute) deleteDict(c *fiber.Ctx) error {
 		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "删除字典失败", err)
 	}
 	return domain.SuccessResponse(c, nil, "删除字典成功")
-}
-
-// 根据code获取字典的extra
-func (r *dictRoute) getDictExtraByCode(c *fiber.Ctx) error {
-	code := c.Params("code")
-	extra, err := r.dictService.GetDictExtraByCode(code)
-	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取字典extra失败", err)
-	}
-	return domain.SuccessResponse(c, extra, "获取字典extra成功")
-}
-
-// 根据code获取子字典列表
-func (r *dictRoute) getSubDictsByCode(c *fiber.Ctx) error {
-	code := c.Params("code")
-	subDicts, err := r.dictService.GetSubDictsByCode(code)
-	if err != nil {
-		return domain.ErrorResponse(c, fiber.StatusInternalServerError, "获取子字典列表失败", err)
-	}
-	return domain.SuccessResponse(c, subDicts, "获取子字典列表成功")
 }
