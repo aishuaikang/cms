@@ -207,7 +207,7 @@ func (s *articleService) GetArticlesByCategoryAliasWithCache(alias string, param
 	var articles []*models.Article
 
 	// 基础查询
-	model := s.db.Model(&models.Article{}).Where("category_id = (SELECT id FROM categories WHERE alias = ?)", alias)
+	model := s.db.Model(&models.Article{}).Where("category_id = (SELECT id FROM categories WHERE alias = ?) AND status = ?", alias, models.StatusPublished)
 	// 统计总数
 	if err := model.Count(&count).Error; err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func (s *articleService) GetArticlesByCategoryAliasWithCache(alias string, param
 func (s *articleService) GetArticleByIDWithCache(id uuid.UUID) (*models.Article, error) {
 	article := new(models.Article)
 	// 检查文章是否存在
-	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(article).Error; err != nil {
+	if err := s.db.Preload(clause.Associations).Where("id = ? AND status = ?", id, models.StatusPublished).First(article).Error; err != nil {
 		return nil, ErrArticleNotFound
 	}
 
@@ -243,7 +243,7 @@ func (s *articleService) GetArticleByIDWithCache(id uuid.UUID) (*models.Article,
 func (s *articleService) GetRelatedArticlesByIDWithCache(id uuid.UUID, params domain.GetRelatedArticlesByIDWithCacheParams) (*domain.LimitResponse[*models.Article], error) {
 	article := new(models.Article)
 	// 检查文章是否存在
-	if err := s.db.Preload(clause.Associations).Where("id = ?", id).First(article).Error; err != nil {
+	if err := s.db.Preload(clause.Associations).Where("id = ? AND status = ?", id, models.StatusPublished).First(article).Error; err != nil {
 		return nil, ErrArticleNotFound
 	}
 
@@ -252,7 +252,7 @@ func (s *articleService) GetRelatedArticlesByIDWithCache(id uuid.UUID, params do
 
 	// 基础查询
 	model := s.db.Model(&models.Article{}).
-		Where("category_id = ? AND id != ?", article.CategoryID, id).
+		Where("category_id = ? AND id != ? AND status = ?", article.CategoryID, id, models.StatusPublished).
 		Or("id IN (SELECT article_id FROM article_tags WHERE tag_id IN (SELECT tag_id FROM article_tags WHERE article_id = ?)) AND id != ?", id, id)
 
 	// 统计总数

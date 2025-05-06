@@ -22,6 +22,9 @@ var (
 
 	// ErrImageInUseByUser 图片正在被用户使用中
 	ErrImageInUseByUser = errors.New("图片正在被用户使用中")
+
+	// ErrDictInUseByUser 图片正在被字典使用中
+	ErrDictInUseByUser = errors.New("图片正在被字典使用中")
 )
 
 type (
@@ -86,7 +89,7 @@ func (s *imageService) DeleteImage(id uuid.UUID, uploadPath string) error {
 		return ErrImageNotFound
 	}
 
-	// 检查图片是否正在被使用
+	// 检查图片是否正在被文章使用
 	if len(image.Articles) > 0 {
 		return ErrImageInUseByArticle
 	}
@@ -94,6 +97,11 @@ func (s *imageService) DeleteImage(id uuid.UUID, uploadPath string) error {
 	// 检查图片是否正在被用户使用
 	if len(image.Users) > 0 {
 		return ErrImageInUseByUser
+	}
+
+	// 检查图片是否正在被字典使用
+	if len(image.Dicts) > 0 {
+		return ErrDictInUseByUser
 	}
 
 	// 删除本地文件

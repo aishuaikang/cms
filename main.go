@@ -131,7 +131,7 @@ func main() {
 		// 这里使用了滑动窗口算法
 
 		commonGroup := api.Group("common", limiter.New(limiter.Config{
-			Max:        100,             // 每个IP的最大请求数
+			Max:        1000,            // 每个IP的最大请求数
 			Expiration: 1 * time.Minute, // 时间窗口为1分钟
 			// KeyGenerator: func(c *fiber.Ctx) string {
 			// 	return c.IP() // 使用IP地址作为限流的唯一标识
