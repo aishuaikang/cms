@@ -41,7 +41,7 @@ func NewDictService(db *gorm.DB) DictService {
 
 func (s *dictService) GetDicts() ([]*models.Dict, error) {
 	var dicts []*models.Dict
-	if err := s.db.Find(&dicts).Error; err != nil {
+	if err := s.db.Order("created_at DESC").Find(&dicts).Error; err != nil {
 		return nil, err
 	}
 	return dicts, nil

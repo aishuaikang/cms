@@ -46,7 +46,7 @@ func NewUserService(db *gorm.DB) UserService {
 
 func (s *userService) GetUsers() ([]*models.User, error) {
 	var users []*models.User
-	if err := s.db.Find(&users).Error; err != nil {
+	if err := s.db.Order("created_at DESC").Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil

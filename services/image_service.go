@@ -46,7 +46,7 @@ func NewImageService(db *gorm.DB) ImageService {
 
 func (s *imageService) GetImages() ([]*models.Image, error) {
 	var images []*models.Image
-	if err := s.db.Preload(clause.Associations).Find(&images).Error; err != nil {
+	if err := s.db.Order("created_at DESC").Preload(clause.Associations).Find(&images).Error; err != nil {
 		return nil, err
 	}
 	return images, nil

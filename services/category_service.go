@@ -42,7 +42,7 @@ func NewCategoryService(db *gorm.DB) CategoryService {
 
 func (s *categoryService) GetCategorys() ([]*models.Category, error) {
 	var categories []*models.Category
-	if err := s.db.Find(&categories).Error; err != nil {
+	if err := s.db.Order("sort DESC, created_at ASC").Find(&categories).Error; err != nil {
 		return nil, err
 	}
 	return categories, nil
@@ -62,6 +62,7 @@ func (s *categoryService) CreateCategory(params domain.CreateCategoryParams) err
 	categoryModel := &models.Category{
 		Name:        params.Name,
 		Alias:       params.Alias,
+		Sort:        params.Sort,
 		Description: params.Description,
 	}
 
@@ -92,6 +93,10 @@ func (s *categoryService) UpdateCategory(id uuid.UUID, params domain.UpdateCateg
 		category.Alias = *params.Alias
 	}
 
+	if params.Sort != nil && category.Sort != *params.Sort {
+		category.Sort = *params.Sort
+	}
+
 	if params.Description != nil && category.Description != *params.Description {
 		category.Description = *params.Description
 	}
@@ -115,7 +120,7 @@ func (s *categoryService) DeleteCategory(id uuid.UUID) error {
 
 func (s *categoryService) GetCategorysWithCache() ([]*models.Category, error) {
 	var categories []*models.Category
-	if err := s.db.Find(&categories).Error; err != nil {
+	if err := s.db.Order("sort DESC, created_at ASC").Find(&categories).Error; err != nil {
 		return nil, err
 	}
 	return categories, nil

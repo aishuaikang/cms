@@ -60,7 +60,7 @@ func (s *articleService) GetArticles(params domain.GetArticleListParams) (*domai
 		s.articleScope.Category(params.CategoryID),
 		s.articleScope.Status(params.Status),
 		scopes.PaginationScope(params.Page, params.PageSize),
-	).Preload(clause.Associations).Find(&articles).Error; err != nil {
+	).Order("created_at DESC").Preload(clause.Associations).Find(&articles).Error; err != nil {
 		return nil, err
 	}
 
@@ -216,7 +216,7 @@ func (s *articleService) GetArticlesByCategoryAliasWithCache(alias string, param
 	// 分页查询
 	if err := model.Scopes(
 		scopes.PaginationScope(params.Page, params.PageSize),
-	).Preload(clause.Associations).Find(&articles).Error; err != nil {
+	).Order("created_at DESC").Preload(clause.Associations).Find(&articles).Error; err != nil {
 		return nil, err
 	}
 
@@ -263,7 +263,7 @@ func (s *articleService) GetRelatedArticlesByIDWithCache(id uuid.UUID, params do
 	// 分页查询
 	if err := model.Scopes(
 		scopes.PaginationScope(params.Page, params.PageSize),
-	).Preload(clause.Associations).Find(&relatedArticles).Error; err != nil {
+	).Order("created_at DESC").Preload(clause.Associations).Find(&relatedArticles).Error; err != nil {
 		return nil, err
 	}
 

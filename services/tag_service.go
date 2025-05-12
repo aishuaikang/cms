@@ -38,7 +38,7 @@ func NewTagService(db *gorm.DB) TagService {
 }
 func (s *tagService) GetTags() ([]*models.Tag, error) {
 	var tags []*models.Tag
-	if err := s.db.Preload(clause.Associations).Find(&tags).Error; err != nil {
+	if err := s.db.Order("created_at DESC").Preload(clause.Associations).Find(&tags).Error; err != nil {
 		return nil, err
 	}
 	return tags, nil
