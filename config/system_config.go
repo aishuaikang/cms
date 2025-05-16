@@ -3,8 +3,10 @@ package config
 import "github.com/spf13/viper"
 
 type SystemConfig struct {
-	SysAdminUser     string `mapstructure:"SYSTEM_ADMIN_USER"`
-	SysAdminPassword string `mapstructure:"SYSTEM_ADMIN_PASSWORD"`
+	Host              string `mapstructure:"HOST"`
+	Port              string `mapstructure:"PORT"`
+	InitAdminUser     string `mapstructure:"INIT_ADMIN_USER"`
+	InitAdminPassword string `mapstructure:"INIT_ADMIN_PASSWORD"`
 }
 
 func NewSystemConfig() (*SystemConfig, error) {

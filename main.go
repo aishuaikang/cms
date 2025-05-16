@@ -9,7 +9,7 @@ import (
 	"cms/routes/common"
 	"cms/services"
 	"cms/utils"
-	"os"
+	"fmt"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -26,6 +26,9 @@ import (
 )
 
 func main() {
+
+	validate := validator.New()
+
 	db, err := utils.InitDB()
 	if err != nil {
 		panic(err)
@@ -40,8 +43,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	validate := validator.New()
 
 	app := fiber.New(fiber.Config{
 		// Prefork:       true,
@@ -85,7 +86,7 @@ func main() {
 	userService := services.NewUserService(db)
 
 	// 创建初始用户
-	if err := userService.CreateInitialUser(systemConfig.SysAdminUser, systemConfig.SysAdminPassword); err != nil {
+	if err := userService.CreateInitialUser(systemConfig.InitAdminUser, systemConfig.InitAdminPassword); err != nil {
 		panic(err)
 	}
 
@@ -159,10 +160,21 @@ func main() {
 		common.NewDictRoute(commonGroup.Group("dict"), dictService, validate).RegisterRoutes()
 	}
 
-	// 从环境变量中读取端口号，默认为 ":3000"
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000" // 默认端口
-	}
-	app.Listen(":" + port)
+	// // 从环境变量中读取端口号，默认为 ":3000"
+	// port := os.Getenv("PORT")
+	// if port == "" {
+	// 	port = "3000" // 默认端口
+	// }
+
+	// systemConfig.Host = os.Getenv("HOST")
+	// if systemConfig.Host == "" {
+	// 	systemConfig.Host = "localhost" // 默认主机
+	// }
+	// systemConfig.Port = port || systemConfig.Port
+	// 设置跨域中间件
+
+	addr := systemConfig.Host + ":" + systemConfig.Port
+	fmt.Printf("服务启动成功，访问地址: http://%s\n", addr)
+
+	app.Listen(addr)
 }
